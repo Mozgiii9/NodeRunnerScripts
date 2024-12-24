@@ -80,11 +80,21 @@ install_docker() {
     echo -e "\n${INFO} Проверка наличия Docker Compose..."
     if ! command -v docker-compose &> /dev/null; then
         echo -e "${INSTALL} Docker Compose не найден. Установка Docker Compose..."
-        sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
+        sudo apt-get update
+        sudo apt-get install -y docker-compose-plugin
+        sudo apt-get install -y docker-compose
         echo -e "${CHECKMARK} Docker Compose установлен"
     else
         echo -e "${CHECKMARK} Docker Compose уже установлен"
+    fi
+
+    # Проверка версии Docker Compose
+    echo -e "\n${INFO} Проверка версии Docker Compose..."
+    docker compose version
+    if [ $? -ne 0 ]; then
+        echo -e "${WARNING} Возможны проблемы с Docker Compose. Попытка исправления..."
+        sudo ln -s /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
+        docker compose version
     fi
 }
 
@@ -104,7 +114,7 @@ start_lens_node() {
     echo -e "\n${PROGRESS} Запуск Lens Node..."
     if [ -d "$LENS_DIR" ]; then
         cd "$LENS_DIR"
-        docker-compose --file testnet-external-node.yml up -d
+        docker compose -f testnet-external-node.yml up -d
         if [ $? -eq 0 ]; then
             echo -e "${SUCCESS} Lens Node успешно запущена"
         else
@@ -120,7 +130,7 @@ stop_lens_node() {
     echo -e "\n${PROGRESS} Остановка Lens Node..."
     if [ -d "$LENS_DIR" ]; then
         cd "$LENS_DIR"
-        docker-compose --file testnet-external-node.yml down
+        docker compose -f testnet-external-node.yml down
         if [ $? -eq 0 ]; then
             echo -e "${SUCCESS} Lens Node успешно остановлена"
         else
