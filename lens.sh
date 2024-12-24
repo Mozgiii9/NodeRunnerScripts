@@ -77,24 +77,24 @@ install_docker() {
         echo -e "${CHECKMARK} Docker уже установлен"
     fi
 
-    echo -e "\n${INFO} Проверка наличия Docker Compose..."
-    if ! command -v docker-compose &> /dev/null; then
-        echo -e "${INSTALL} Docker Compose не найден. Установка Docker Compose..."
-        sudo apt-get update
-        sudo apt-get install -y docker-compose-plugin
-        sudo apt-get install -y docker-compose
-        echo -e "${CHECKMARK} Docker Compose установлен"
+    echo -e "\n${INFO} Настройка Docker Compose..."
+    
+    # Удаление старых версий Docker Compose
+    sudo rm -f /usr/local/bin/docker-compose
+    sudo rm -f /usr/bin/docker-compose
+    
+    # Установка новой версии Docker Compose
+    echo -e "${INSTALL} Установка Docker Compose..."
+    sudo apt-get update
+    sudo apt-get remove -y docker-compose docker-compose-plugin
+    sudo apt-get install -y docker-compose-plugin
+    
+    # Проверка установки
+    if docker compose version &>/dev/null; then
+        echo -e "${CHECKMARK} Docker Compose успешно настроен"
     else
-        echo -e "${CHECKMARK} Docker Compose уже установлен"
-    fi
-
-    # Проверка версии Docker Compose
-    echo -e "\n${INFO} Проверка версии Docker Compose..."
-    docker compose version
-    if [ $? -ne 0 ]; then
-        echo -e "${WARNING} Возможны проблемы с Docker Compose. Попытка исправления..."
-        sudo ln -s /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
-        docker compose version
+        echo -e "${ERROR} Ошибка настройки Docker Compose"
+        exit 1
     fi
 }
 
@@ -109,35 +109,62 @@ clone_lens_node() {
     fi
 }
 
+# Функция проверки Docker Compose
+check_docker_compose() {
+    if ! docker compose version &>/dev/null; then
+        echo -e "${ERROR} Docker Compose не найден или неправильно настроен"
+        return 1
+    fi
+    return 0
+}
+
 # Функция запуска ноды
 start_lens_node() {
     echo -e "\n${PROGRESS} Запуск Lens Node..."
+    
+    # Проверяем Docker Compose
+    if ! check_docker_compose; then
+        echo -e "${ERROR} Невозможно запустить ноду без Docker Compose"
+        return 1
+    fi
+    
     if [ -d "$LENS_DIR" ]; then
         cd "$LENS_DIR"
-        docker compose -f testnet-external-node.yml up -d
-        if [ $? -eq 0 ]; then
+        echo -e "${INFO} Запуск контейнеров..."
+        if sudo docker compose -f testnet-external-node.yml up -d; then
             echo -e "${SUCCESS} Lens Node успешно запущена"
         else
             echo -e "${ERROR} Ошибка при запуске Lens Node"
+            return 1
         fi
     else
         echo -e "${ERROR} Директория lens-node не найдена"
+        return 1
     fi
 }
 
 # Функция остановки ноды
 stop_lens_node() {
     echo -e "\n${PROGRESS} Остановка Lens Node..."
+    
+    # Проверяем Docker Compose
+    if ! check_docker_compose; then
+        echo -e "${ERROR} Невозможно остановить ноду без Docker Compose"
+        return 1
+    fi
+    
     if [ -d "$LENS_DIR" ]; then
         cd "$LENS_DIR"
-        docker compose -f testnet-external-node.yml down
-        if [ $? -eq 0 ]; then
+        echo -e "${INFO} Остановка контейнеров..."
+        if sudo docker compose -f testnet-external-node.yml down; then
             echo -e "${SUCCESS} Lens Node успешно остановлена"
         else
             echo -e "${ERROR} Ошибка при остановке Lens Node"
+            return 1
         fi
     else
         echo -e "${ERROR} Директория lens-node не найдена"
+        return 1
     fi
 }
 
