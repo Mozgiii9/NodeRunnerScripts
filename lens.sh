@@ -27,13 +27,18 @@ LOGS="📄"
 CONFIG="⚙️"
 EXIT="🚪"
 
+# Определение пользователя и директории
+CURRENT_USER=$(whoami)
+HOME_DIR=$(eval echo "~$CURRENT_USER")
+LENS_DIR="$HOME_DIR/lens-node"
+
 # ASCII арт и заголовок
 display_ascii() {
     # Проверка наличия curl
     if ! command -v curl &> /dev/null; then
         echo -e "${ORANGE}Установка curl...${NC}"
-        apt update
-        apt install curl -y
+        sudo apt update
+        sudo apt install curl -y
     fi
     sleep 1
 
@@ -63,8 +68,11 @@ install_docker() {
         sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
         curl -fsSL https://get.docker.com -o get-docker.sh
         sudo sh get-docker.sh
-        sudo usermod -aG docker $USER
+        sudo usermod -aG docker $CURRENT_USER
         echo -e "${CHECKMARK} Docker установлен"
+        echo -e "${WARNING} Требуется перезайти в систему для применения изменений группы docker"
+        read -p "Нажмите Enter для продолжения..."
+        exec su -l $CURRENT_USER
     else
         echo -e "${CHECKMARK} Docker уже установлен"
     fi
@@ -83,10 +91,10 @@ install_docker() {
 # Функция клонирования репозитория
 clone_lens_node() {
     echo -e "\n${PROGRESS} Клонирование репозитория Lens Node..."
-    if [ -d "lens-node" ]; then
+    if [ -d "$LENS_DIR" ]; then
         echo -e "${WARNING} Директория lens-node уже существует"
     else
-        git clone https://github.com/lens-network/lens-node && cd lens-node
+        git clone https://github.com/lens-network/lens-node "$LENS_DIR" && cd "$LENS_DIR"
         echo -e "${CHECKMARK} Репозиторий Lens Node успешно клонирован"
     fi
 }
@@ -94,8 +102,8 @@ clone_lens_node() {
 # Функция запуска ноды
 start_lens_node() {
     echo -e "\n${PROGRESS} Запуск Lens Node..."
-    if [ -d "lens-node" ]; then
-        cd lens-node
+    if [ -d "$LENS_DIR" ]; then
+        cd "$LENS_DIR"
         docker-compose --file testnet-external-node.yml up -d
         if [ $? -eq 0 ]; then
             echo -e "${SUCCESS} Lens Node успешно запущена"
@@ -110,8 +118,8 @@ start_lens_node() {
 # Функция остановки ноды
 stop_lens_node() {
     echo -e "\n${PROGRESS} Остановка Lens Node..."
-    if [ -d "lens-node" ]; then
-        cd lens-node
+    if [ -d "$LENS_DIR" ]; then
+        cd "$LENS_DIR"
         docker-compose --file testnet-external-node.yml down
         if [ $? -eq 0 ]; then
             echo -e "${SUCCESS} Lens Node успешно остановлена"
@@ -153,6 +161,8 @@ main_menu() {
         display_ascii
         draw_top_border
         echo -e "  ${SUCCESS}  ${GREEN}Добро пожаловать в мастер установки Lens Node!${NC}"
+        echo -e "  ${INFO} Текущий пользователь: ${CYAN}$CURRENT_USER${NC}"
+        echo -e "  ${INFO} Рабочая директория: ${CYAN}$LENS_DIR${NC}"
         draw_middle_border
         echo -e "${CYAN}  1) Установить и запустить ноду ${INSTALL}${NC}"
         echo -e "${CYAN}  2) Остановить ноду ${TRASH}${NC}"
