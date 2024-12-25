@@ -79,8 +79,7 @@ case $choice in
         HOME_DIR=$(eval echo ~$USER)
 
         echo -e "${TEAL}🚀 Запуск установочного скрипта...${RESET}"
-        chmod +x "$HOME_DIR/fizzup-v.1.2.0.sh"
-        "$HOME_DIR/fizzup-v.1.2.0.sh"
+        curl -sL1 https://sphnctl.sh | bash
 
         # Завершение
         echo -e "\n${LIME}✅ Установка успешно завершена!${RESET}"
@@ -102,8 +101,7 @@ case $choice in
         rm -rf "$HOME_DIR/fizzup-v.1.1.0.sh"
         
         echo -e "${TEAL}🚀 Запуск новой версии...${RESET}"
-        chmod +x "$HOME_DIR/fizzup-v.1.2.0.sh"
-        "$HOME_DIR/fizzup-v.1.2.0.sh"
+        curl -sL1 https://sphnctl.sh | bash
         
         echo -e "${LIME}✅ Нода успешно обновлена!${RESET}\n"
         ;;
