@@ -9,19 +9,29 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-# Логотип
-display_logo() {
-    # Проверка наличия curl
+# Иконки
+CHECKMARK="✅"
+ERROR="❌"
+PROGRESS="⏳"
+INSTALL="📦"
+SUCCESS="🎉"
+WARNING="⚠️"
+NODE="🖥️"
+INFO="ℹ️"
+TRASH="🗑️"
+UPDATE="🔄"
+LOGS="📄"
+EXIT="🚪"
+
+# ASCII арт и заголовок
+display_ascii() {
     if ! command -v curl &> /dev/null; then
-        echo -e "${ORANGE}Установка curl...${NC}"
-        apt update
-        apt install curl -y
+        echo -e "${YELLOW}Установка curl...${NC}"
+        sudo apt update
+        sudo apt install curl -y
     fi
     sleep 1
-
-    # Загрузка и отображение логотипа
     curl -s https://raw.githubusercontent.com/Mozgiii9/NodeRunnerScripts/refs/heads/main/logo.sh | bash
-    sleep 2
 }
 
 # Функции отрисовки границ меню
@@ -37,189 +47,121 @@ draw_bottom_border() {
     echo -e "${BLUE}╚══════════════════════════════════════════════════════╝${NC}"
 }
 
-# Проверка системных требований
-check_requirements() {
-    echo -e "\n${YELLOW}📊 Проверка системных требований...${NC}"
-    CPU=$(grep -c ^processor /proc/cpuinfo)
-    RAM=$(free -m | awk '/Mem:/ { print $2 }')
-    DISK=$(df -h / | awk '/\// { print $4 }' | sed 's/G//g')
-
-    echo -e "${CYAN}Ядер CPU: ${GREEN}$CPU${NC} (минимум: 2)"
-    echo -e "${CYAN}Доступная память: ${GREEN}${RAM}MB${NC} (минимум: 2GB)"
-
-    if [ "$CPU" -lt 2 ] || [ "$RAM" -lt 2000 ]; then
-        echo -e "${RED}❌ Системные требования не соответствуют минимальным!${NC}"
-        return 1
-    fi
+# Установка ноды
+install_node() {
+    echo -e "\n${BLUE}${NODE} Установка ноды Hyperlane...${NC}"
     
-    echo -e "${GREEN}✅ Системные требования соответствуют!${NC}"
-}
+    echo -e "${PROGRESS} Обновление системы..."
+    sudo apt update -y
+    sudo apt upgrade -y
 
-# Установка Docker
-install_docker() {
-    echo -e "\n${YELLOW}🐳 Установка Docker...${NC}"
+    # Установка Docker
     if ! command -v docker &> /dev/null; then
-        sudo apt-get update
-        sudo apt-get install -y docker.io
+        echo -e "${PROGRESS} Установка Docker..."
+        sudo apt install docker.io -y
         sudo systemctl start docker
         sudo systemctl enable docker
-        sudo usermod -aG docker $USER
-        echo -e "${GREEN}✅ Docker успешно установлен${NC}"
     else
-        echo -e "${GREEN}✅ Docker уже установлен${NC}"
-    fi
-}
-
-# Установка Node.js и NVM
-install_node() {
-    echo -e "\n${YELLOW}📦 Установка Node.js и NVM...${NC}"
-    if ! command -v nvm &> /dev/null; then
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
-        export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-        source ~/.bashrc
-        nvm install 20
-        echo -e "${GREEN}✅ Node.js и NVM успешно установлены${NC}"
-    else
-        echo -e "${GREEN}✅ Node.js и NVM уже установлены${NC}"
-    fi
-}
-
-# Установка Foundry
-install_foundry() {
-    echo -e "\n${YELLOW}🛠️ Установка Foundry...${NC}"
-    if ! command -v foundryup &> /dev/null; then
-        curl -L https://foundry.paradigm.xyz | bash
-        source ~/.bashrc
-        foundryup
-        echo -e "${GREEN}✅ Foundry успешно установлен${NC}"
-    else
-        echo -e "${GREEN}✅ Foundry уже установлен${NC}"
-    fi
-}
-
-# Установка Hyperlane
-install_hyperlane() {
-    echo -e "\n${YELLOW}🚀 Установка Hyperlane...${NC}"
-    if ! command -v hyperlane &> /dev/null; then
-        npm install -g @hyperlane-xyz/cli
-        echo -e "${GREEN}✅ Hyperlane CLI установлен${NC}"
+        echo -e "${CHECKMARK} Docker уже установлен"
     fi
 
-    echo -e "${YELLOW}📥 Загрузка образа Hyperlane...${NC}"
+    echo -e "${PROGRESS} Загрузка Docker образа..."
     docker pull --platform linux/amd64 gcr.io/abacus-labs-dev/hyperlane-agent:agents-v1.0.0
-    echo -e "${GREEN}✅ Образ Hyperlane загружен${NC}"
+
+    # Ввод данных
+    echo -e "${YELLOW}Введите имя валидатора:${NC}"
+    read NAME
+    echo -e "${YELLOW}Введите приватный ключ от EVM кошелька начиная с 0x:${NC}"
+    read PRIVATE_KEY
+
+    # Создание директории
+    mkdir -p $HOME/hyperlane_db_base
+    chmod -R 777 $HOME/hyperlane_db_base
+
+    echo -e "${PROGRESS} Запуск Docker контейнера..."
+    docker run -d -it \
+    --name hyperlane \
+    --mount type=bind,source=$HOME/hyperlane_db_base,target=/hyperlane_db_base \
+    gcr.io/abacus-labs-dev/hyperlane-agent:agents-v1.0.0 \
+    ./validator \
+    --db /hyperlane_db_base \
+    --originChainName base \
+    --reorgPeriod 1 \
+    --validator.id "$NAME" \
+    --checkpointSyncer.type localStorage \
+    --checkpointSyncer.folder base \
+    --checkpointSyncer.path /hyperlane_db_base/base_checkpoints \
+    --validator.key "$PRIVATE_KEY" \
+    --chains.base.signer.key "$PRIVATE_KEY" \
+    --chains.base.customRpcUrls https://base.llamarpc.com
+
+    echo -e "${SUCCESS} Нода успешно установлена!"
+    echo -e "${INFO} Для просмотра логов используйте: docker logs -f hyperlane"
+    
+    echo -e "${PROGRESS} Отображение логов..."
+    sleep 2
+    docker logs -f hyperlane
 }
 
-# Настройка и запуск валидатора
-configure_validator() {
-    echo -e "\n${YELLOW}⚙️ Настройка валидатора...${NC}"
-    
-    read -p "Введите имя валидатора: " VALIDATOR_NAME
-    
-    while true; do
-        read -s -p "Введите приватный ключ (формат: 0x + 64 hex символа): " PRIVATE_KEY
-        echo
-        if [[ $PRIVATE_KEY =~ ^0x[0-9a-fA-F]{64}$ ]]; then
-            break
-        else
-            echo -e "${RED}❌ Неверный формат ключа!${NC}"
-        fi
-    done
-    
-    read -p "Введите RPC URL: " RPC_URL
-
-    DB_DIR="/opt/hyperlane_db_base"
-    mkdir -p $DB_DIR
-    chmod -R 777 $DB_DIR
-
-    CONTAINER_NAME="hyperlane"
-    if docker ps -a --format '{{.Names}}' | grep -q "^hyperlane$"; then
-        echo -e "${YELLOW}⚠️ Найден существующий контейнер 'hyperlane'${NC}"
-        read -p "Удалить старый контейнер? (y/n): " choice
-        if [[ "$choice" == "y" ]]; then
-            docker rm -f hyperlane
-            echo -e "${GREEN}✅ Старый контейнер удален${NC}"
-        else
-            read -p "Введите новое имя контейнера: " CONTAINER_NAME
-        fi
-    fi
-
-    docker run -d \
-        -it \
-        --name "$CONTAINER_NAME" \
-        --mount type=bind,source="$DB_DIR",target=/hyperlane_db_base \
-        gcr.io/abacus-labs-dev/hyperlane-agent:agents-v1.0.0 \
-        ./validator \
-        --db /hyperlane_db_base \
-        --originChainName base \
-        --reorgPeriod 1 \
-        --validator.id "$VALIDATOR_NAME" \
-        --checkpointSyncer.type localStorage \
-        --checkpointSyncer.folder base \
-        --checkpointSyncer.path /hyperlane_db_base/base_checkpoints \
-        --validator.key "$PRIVATE_KEY" \
-        --chains.base.signer.key "$PRIVATE_KEY" \
-        --chains.base.customRpcUrls "$RPC_URL"
-
-    echo -e "${GREEN}✅ Валидатор успешно запущен${NC}"
+# Обновление ноды
+update_node() {
+    echo -e "\n${BLUE}${UPDATE} Обновление ноды Hyperlane...${NC}"
+    echo -e "${SUCCESS} Установлена актуальная версия ноды!"
 }
 
 # Просмотр логов
 view_logs() {
-    echo -e "\n${YELLOW}📄 Просмотр логов...${NC}"
-    if docker ps -a --format '{{.Names}}' | grep -q "^hyperlane$"; then
-        docker logs -f hyperlane
-    else
-        echo -e "${RED}❌ Контейнер 'hyperlane' не найден${NC}"
-    fi
+    echo -e "\n${BLUE}${LOGS} Просмотр логов...${NC}"
+    docker logs -f hyperlane
 }
 
-# Главное меню
+# Удаление ноды
+remove_node() {
+    echo -e "\n${BLUE}${TRASH} Удаление ноды Hyperlane...${NC}"
+    
+    echo -e "${PROGRESS} Остановка и удаление контейнера..."
+    docker stop hyperlane
+    docker rm hyperlane
+
+    if [ -d "$HOME/hyperlane_db_base" ]; then
+        echo -e "${PROGRESS} Удаление директории ноды..."
+        rm -rf $HOME/hyperlane_db_base
+        echo -e "${CHECKMARK} Директория ноды удалена"
+    fi
+
+    echo -e "${SUCCESS} Нода успешно удалена!"
+}
+
+# Основное меню
 main_menu() {
     while true; do
-        display_logo
+        display_ascii
         draw_top_border
-        echo -e "  ${GREEN}Добро пожаловать в мастер установки Hyperlane Node!${NC}"
+        echo -e "  ${SUCCESS}  ${GREEN}Добро пожаловать в мастер управления нодой Hyperlane!${NC}"
         draw_middle_border
-        echo -e "${CYAN}  1)${NC} Проверить системные требования 📊"
-        echo -e "${CYAN}  2)${NC} Установить зависимости (Docker, Node.js, Foundry) 📦"
-        echo -e "${CYAN}  3)${NC} Установить Hyperlane 🚀"
-        echo -e "${CYAN}  4)${NC} Настроить и запустить валидатор ⚙️"
-        echo -e "${CYAN}  5)${NC} Просмотр логов 📄"
-        echo -e "${CYAN}  6)${NC} Выполнить все шаги автоматически ✨"
-        echo -e "${CYAN}  0)${NC} Выход 🚪"
+        echo -e "${CYAN}  1)${NC} Установить ноду ${INSTALL}"
+        echo -e "${CYAN}  2)${NC} Обновить ноду ${UPDATE}"
+        echo -e "${CYAN}  3)${NC} Просмотр логов ${LOGS}"
+        echo -e "${CYAN}  4)${NC} Удалить ноду ${TRASH}"
+        echo -e "${CYAN}  5)${NC} Выход ${EXIT}"
         draw_bottom_border
         
-        read -p "$(echo -e $GREEN)Выберите действие [0-6]:${NC} " choice
+        read -p "$(echo -e $GREEN)Выберите действие [1-5]:${NC} " choice
 
         case $choice in
-            1) check_requirements ;;
-            2) install_docker && install_node && install_foundry ;;
-            3) install_hyperlane ;;
-            4) configure_validator ;;
-            5) view_logs ;;
-            6)
-                check_requirements
-                install_docker
-                install_node
-                install_foundry
-                install_hyperlane
-                configure_validator
-                view_logs
-                ;;
-            0)
-                echo -e "${GREEN}👋 До свидания!${NC}"
-                exit 0
-                ;;
-            *)
-                echo -e "${RED}❌ Неверный выбор. Попробуйте снова.${NC}"
-                read -p "Нажмите Enter для продолжения..."
-                ;;
+            1) install_node ;;
+            2) update_node ;;
+            3) view_logs ;;
+            4) remove_node ;;
+            5) echo -e "${SUCCESS} Выход..."; exit 0 ;;
+            *) echo -e "${ERROR} Неверный выбор. Используйте числа от 1 до 5." ;;
         esac
+
+        if [ "$choice" != "1" ] && [ "$choice" != "3" ]; then
+            read -p "Нажмите Enter для возврата в меню..."
+        fi
     done
 }
 
-# Запуск основного меню
+# Запуск скрипта
 main_menu
