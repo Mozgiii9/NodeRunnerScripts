@@ -78,12 +78,9 @@ case $choice in
         # Настройка домашней директории
         HOME_DIR=$(eval echo ~$USER)
 
-        # Настройка прав и запуск
-        echo -e "${TEAL}⚙️ Настройка прав доступа...${RESET}"
-        chmod +x "$HOME_DIR/fizzup.sh"
-
         echo -e "${TEAL}🚀 Запуск установочного скрипта...${RESET}"
-        "$HOME_DIR/fizzup.sh"
+        chmod +x "$HOME_DIR/fizzup-v.1.2.0.sh"
+        "$HOME_DIR/fizzup-v.1.2.0.sh"
 
         # Завершение
         echo -e "\n${LIME}✅ Установка успешно завершена!${RESET}"
@@ -92,7 +89,23 @@ case $choice in
         sleep 2
         ;;
     2)
-        echo -e "\n${LIME}✅ Установлена актуальная версия ноды${RESET}"
+        echo -e "\n${INDIGO}🔄 Обновление ноды Spheron...${RESET}"
+        
+        echo -e "${TEAL}⏳ Остановка сервисов...${RESET}"
+        docker-compose -f ~/.spheron/fizz/docker-compose.yml down
+        sleep 3
+
+        echo -e "${TEAL}🧹 Удаление старых файлов...${RESET}"
+        rm -rf ~/.spheron
+        rm -f "$HOME_DIR/fizzup.sh"
+        rm -f "$HOME_DIR/fizzup-v*.sh"
+        rm -rf "$HOME_DIR/fizzup-v.1.1.0.sh"
+        
+        echo -e "${TEAL}🚀 Запуск новой версии...${RESET}"
+        chmod +x "$HOME_DIR/fizzup-v.1.2.0.sh"
+        "$HOME_DIR/fizzup-v.1.2.0.sh"
+        
+        echo -e "${LIME}✅ Нода успешно обновлена!${RESET}\n"
         ;;
     3)
         echo -e "\n${INDIGO}📊 Проверка логов...${RESET}"
@@ -108,6 +121,7 @@ case $choice in
         echo -e "${TEAL}🧹 Удаление файлов...${RESET}"
         rm -rf ~/.spheron
         rm -f "$HOME_DIR/fizzup.sh"
+        rm -f "$HOME_DIR/fizzup-v*.sh"
 
         echo -e "${LIME}✅ Нода успешно удалена!${RESET}\n"
         ;;
