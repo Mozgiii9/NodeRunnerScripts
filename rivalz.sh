@@ -60,6 +60,7 @@ install_node() {
     
     echo -e "${PROGRESS} Установка rivalz-node-cli..."
     npm i -g rivalz-node-cli
+    rivalz run
 
     echo -e "\n${SUCCESS} Нода успешно установлена!"
 }
