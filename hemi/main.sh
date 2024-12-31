@@ -11,9 +11,9 @@ NC='\033[0m' # Без цвета
 
 # Показ логотипа
 echo "Загрузка анимации... 🎬"
-wget -O logo.sh https://raw.githubusercontent.com/Mozgiii9/NodeRunnerScripts/refs/heads/main/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
-rm -rf logo.sh loader.sh
-sleep 4
+wget -O logo.sh curl -s https://raw.githubusercontent.com/Mozgiii9/NodeRunnerScripts/refs/heads/main/logo.sh && chmod +x logo.sh && sed -i 's/\r$//' logo.sh && ./logo.sh
+rm -rf logo.sh
+sleep 2
 
 # Перехват прерывания скрипта
 trap 'echo -e "${RED}Скрипт прерван.${NC}"; exit 1' INT TERM
@@ -344,3 +344,79 @@ monitor_all_accounts() {
         done
         
         sleep 5
+    done
+}
+
+# Функция удаления аккаунта
+delete_account_instance() {
+    list_accounts
+    read -p "Введите имя аккаунта для удаления: " acc_name
+    local account_dir="$BASE_DIR/hemi-$acc_name"
+    
+    if [ -d "$account_dir" ]; then
+        if pgrep -f "hemi-$acc_name/start_popmd" > /dev/null; then
+            print_warning "Майнер запущен. Сначала остановим его... ⏹️"
+            stop_specific_account "$acc_name"
+        fi
+        
+        read -p "Вы уверены, что хотите удалить $acc_name? Это действие нельзя отменить (y/n): " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            backup_dir="$HOME/.hemi_backup/instances"
+            mkdir -p "$backup_dir"
+            backup_name="hemi-${acc_name}_backup_$(date +%Y%m%d_%H%M%S)"
+            
+            if cp -r "$account_dir" "$backup_dir/$backup_name"; then
+                print_success "Создана резервная копия: $backup_dir/$backup_name 💾"
+                
+                if rm -rf "$account_dir"; then
+                    print_success "Аккаунт $acc_name успешно удален ✅"
+                else
+                    print_error "Не удалось удалить аккаунт $acc_name ❌"
+                fi
+            else
+                print_error "Не удалось создать резервную копию. Удаление отменено ❌"
+            fi
+        else
+            print_warning "Удаление отменено ⚠️"
+        fi
+    else
+        print_error "Аккаунт $acc_name не найден ❌"
+    fi
+}
+
+# Редактирование конфигурации аккаунта
+edit_account_config() {
+    list_accounts
+    read -p "Введите имя аккаунта для редактирования: " acc_name
+    local account_dir="$BASE_DIR/hemi-$acc_name"
+    
+    if [ -d "$account_dir" ]; then
+        backup_env
+        
+        read -p "Хотите обновить комиссию? (y/n): " update_fee
+        if [[ "$update_fee" =~ ^[Yy]$ ]]; then
+            check_and_set_fees
+        fi
+        
+        nano "$account_dir/.env"
+        print_success "Конфигурация обновлена для $acc_name ✅"
+    else
+        print_error "Аккаунт $acc_name не найден ❌"
+    fi
+}
+
+# Основное выполнение
+clear
+echo -e "${PURPLE}================================${NC}"
+echo -e "${CYAN}    Менеджер Майнинг-Аккаунтов    ${NC}"
+echo -e "${PURPLE}================================${NC}"
+
+# Выполнение начальной настройки
+check_system
+check_resources
+check_updates
+install_prerequisites
+setup_hemi
+
+# Запуск менеджера аккаунтов
+manage_accounts
