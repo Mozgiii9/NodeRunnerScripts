@@ -95,6 +95,7 @@ EOT"
 
         echo -e "${TEAL}🔄 Перезагрузка демона...${RESET}"
         sudo systemctl daemon-reload
+        sudo systemctl restart systemd-journald
         sleep 1
 
         echo -e "${TEAL}▶️ Запуск сервиса...${RESET}"
@@ -128,6 +129,7 @@ EOT"
 
         echo -e "${TEAL}🔄 Перезапуск сервиса...${RESET}"
         sudo systemctl daemon-reload
+        sudo systemctl restart systemd-journald
         sudo systemctl start dria
 
         echo -e "${LIME}✅ Порт успешно изменен!${RESET}"
