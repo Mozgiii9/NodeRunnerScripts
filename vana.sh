@@ -113,20 +113,30 @@ install_base_dependencies() {
     
     # Node.js и npm
     log "7/8 📦 Установка Node.js и npm..."
-    curl -fsSL https://fnm.vercel.app/install | bash
-    source ~/.bashrc
-    fnm use --install-if-missing 22
+    
+    # Установка NVM
+    log "Установка NVM..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+    
+    # Загрузка NVM
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    
+    # Установка Node.js
+    nvm install 22
+    nvm use 22
     check_error "Ошибка установки Node.js"
     
     if command -v node &> /dev/null; then
         success "Node.js успешно установлен: $(node -v)"
+        success "NPM успешно установлен: $(npm -v)"
     else
         error "Ошибка установки Node.js"
     fi
     
     # Yarn
     log "8/8 🧶 Установка Yarn..."
-    apt-get install nodejs -y
     npm install -g yarn
     if command -v yarn &> /dev/null; then
         success "Yarn успешно установлен: $(yarn --version)"
