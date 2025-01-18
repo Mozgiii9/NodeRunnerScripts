@@ -84,7 +84,7 @@ case $choice in
         echo "EXECUTOR_PROCESS_CLAIMS=true" >> $CONFIG_FILE
         echo "PRIVATE_KEY_LOCAL=" >> $CONFIG_FILE
         echo "ENABLED_NETWORKS='arbitrum-sepolia,base-sepolia,optimism-sepolia,l1rn'" >> $CONFIG_FILE
-        echo "RPC_ENDPOINTS_BSSP='https://base-sepolia-rpc.publicnode.com'" >> $CONFIG_FILE
+        echo "RPC_ENDPOINTS_BSSP='https://brn.calderarpc.com/'" >> $CONFIG_FILE
 
         echo -e "${YELLOW}🔑 Введите ваш приватный ключ:${NC}"
         read PRIVATE_KEY
@@ -162,7 +162,7 @@ EOT"
         echo "EXECUTOR_PROCESS_CLAIMS=true" >> $CONFIG_FILE
         echo "PRIVATE_KEY_LOCAL=" >> $CONFIG_FILE
         echo "ENABLED_NETWORKS='arbitrum-sepolia,base-sepolia,optimism-sepolia,l1rn'" >> $CONFIG_FILE
-        echo "RPC_ENDPOINTS_BSSP='https://base-sepolia-rpc.publicnode.com'" >> $CONFIG_FILE
+        echo "RPC_ENDPOINTS_BSSP='https://brn.calderarpc.com/'" >> $CONFIG_FILE
 
         echo -e "${YELLOW}🔑 Введите ваш приватный ключ:${NC}"
         read PRIVATE_KEY
