@@ -340,9 +340,16 @@ remove_node() {
     read -p "Нажмите Enter для возврата в главное меню..."
 }
 
+# Функция отображения логотипа
+show_logo() {
+    curl -s https://raw.githubusercontent.com/Mozgiii9/NodeRunnerScripts/refs/heads/main/logo.sh | bash
+    echo
+}
+
 # Функция главного меню
 show_menu() {
     clear
+    show_logo
     echo -e "${BLUE}╭───────────────────────────────────╮${NC}"
     echo -e "${BLUE}│     🌟 Управление нодой Vana     │${NC}"
     echo -e "${BLUE}╰───────────────────────────────────╯${NC}"
