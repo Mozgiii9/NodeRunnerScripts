@@ -34,19 +34,22 @@ show_logo() {
     echo
 }
 
-# Установка необходимых пакетов
-echo -e "${BLUE}🔧 Установка необходимых пакетов...${NC}"
-sudo apt install curl docker.io docker-compose jq -y
+# Функция установки зависимостей
+install_dependencies() {
+    log "🔧 Установка необходимых пакетов..."
+    sudo apt install curl docker.io docker-compose jq -y
 
-echo -e "${BLUE}🚀 Запуск сервиса Docker...${NC}"
-sudo systemctl start docker
-sudo systemctl enable docker
+    log "🚀 Запуск сервиса Docker..."
+    sudo systemctl start docker
+    sudo systemctl enable docker
 
-if ! sudo systemctl is-active --quiet docker; then
-    error "Docker сервис не запущен. Проверьте статус командой: 'systemctl status docker'"
-fi
+    if ! sudo systemctl is-active --quiet docker; then
+        error "Docker сервис не запущен. Проверьте статус командой: 'systemctl status docker'"
+    fi
 
-sudo usermod -aG docker $USER
+    sudo usermod -aG docker $USER
+    success "✨ Зависимости успешно установлены"
+}
 
 BASE_DIR="$HOME/citrea-node"
 INITIAL_DIR=$(pwd)
@@ -60,7 +63,9 @@ install_default() {
     if [ -d "$BASE_DIR" ]; then
         warning "Нода Citrea уже установлена! Сначала удалите её."
         return
-    }
+    fi
+
+    install_dependencies
 
     log "🚀 Установка ноды Citrea со стандартными настройками..."
     mkdir -p $BASE_DIR && cd $BASE_DIR
@@ -75,7 +80,9 @@ install_custom() {
     if [ -d "$BASE_DIR" ]; then
         warning "Нода Citrea уже установлена! Сначала удалите её."
         return
-    }
+    fi
+
+    install_dependencies
 
     log "⚙️ Установка ноды Citrea с пользовательскими настройками..."
     
@@ -133,7 +140,7 @@ uninstall_node() {
 view_logs() {
     if [ ! -d "$BASE_DIR" ]; then
         error "Нода не установлена! Директория citrea-node не найдена."
-    }
+    fi
     
     log "📋 Просмотр логов..."
     cd $BASE_DIR && docker-compose logs
@@ -143,7 +150,7 @@ view_logs() {
 check_sync() {
     if [ ! -d "$BASE_DIR" ]; then
         error "Нода не установлена! Директория citrea-node не найдена."
-    }
+    fi
     
     local current_port=$(grep "ROLLUP__RPC__BIND_PORT=" $BASE_DIR/docker-compose.yml | cut -d'=' -f2)
     if [ -z "$current_port" ]; then
@@ -172,6 +179,7 @@ show_menu() {
     echo -e "${YELLOW}⌨️  Выберите опцию (1-6):${NC}"
 }
 
+# Запуск главного меню
 while true; do
     show_menu
     read choice
