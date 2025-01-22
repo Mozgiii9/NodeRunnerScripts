@@ -97,9 +97,6 @@ imap_settings:
   
   # Региональные провайдеры
   mail.ru: imap.mail.ru
-  rambler.ru: imap.rambler.ru
-  gmx.com: imap.gmx.com
-  onet.pl: imap.poczta.onet.pl
 ```
 
 ### 📁 Структура входных файлов
