@@ -1,10 +1,5 @@
 # 🌅 Dawn Software [v1.0.0]
 
-<div align="center">
-  <img src="![CleanShot 2025-01-22 at 15 42 19@2x](https://github.com/user-attachments/assets/62fcb0d4-d5b7-4766-92bf-8bc620d04247)
-" alt="Dawn Software" width="600"/>
-</div>
-
 ## 📋 Содержание
 - [Возможности](#-возможности)
 - [Требования](#-требования)
