@@ -42,7 +42,7 @@
 
 1. **Клонирование репозитория**
    ```bash
-   git clone [URL репозитория]
+   git clone https://github.com/Mozgiii9/NodeRunnerScripts/tree/ddffe9823d397f0763ffdbfb24823f5232eda912/Dawn
    ```
 
 2. **Настройка виртуального окружения**
