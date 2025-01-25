@@ -3,6 +3,7 @@ import asyncio
 import random
 import logging
 import sys
+import os
 from datetime import datetime
 from typing import List, Dict, Optional
 
@@ -19,19 +20,29 @@ logger = logging.getLogger(__name__)
 
 class GaiaBot:
     def __init__(self):
-        self.url = f"https://{self.get_node_id()}.gaia.domains/v1/chat/completions"
+        """Инициализация бота."""
+        # Проверка обязательных переменных окружения
+        self.node_id = os.getenv("NODE_ID")
+        if not self.node_id:
+            logger.error("❌ Не указан NODE_ID в переменных окружения!")
+            sys.exit(1)
+
+        # Настройка URL и заголовков
+        self.url = f"https://{self.node_id}.gaia.domains/v1/chat/completions"
         self.headers = {
             "accept": "application/json",
             "Content-Type": "application/json"
         }
+
+        # Загрузка дополнительных настроек из переменных окружения
+        self.retry_count = int(os.getenv("RETRY_COUNT", "3"))
+        self.retry_delay = int(os.getenv("RETRY_DELAY", "5"))
+        self.timeout = int(os.getenv("TIMEOUT", "60"))
+
+        # Инициализация переменных
         self.roles: List[str] = []
         self.phrases: List[str] = []
         self.session: Optional[aiohttp.ClientSession] = None
-        self.retry_count = 3
-        self.retry_delay = 5
-        self.timeout = 60
-
-    @staticmethod
 
     async def initialize(self) -> None:
         """Инициализация бота и загрузка необходимых данных."""
@@ -49,7 +60,10 @@ class GaiaBot:
         """Загрузка данных из файла с обработкой ошибок."""
         try:
             with open(file_name, "r") as file:
-                return [line.strip() for line in file.readlines() if line.strip()]
+                data = [line.strip() for line in file.readlines() if line.strip()]
+                if not data:
+                    raise ValueError(f"Файл {file_name} пуст")
+                return data
         except FileNotFoundError:
             logger.error(f"❌ Файл {file_name} не найден!")
             sys.exit(1)
