@@ -32,14 +32,6 @@ class GaiaBot:
         self.timeout = 60
 
     @staticmethod
-    def get_node_id() -> str:
-        """Получение ID ноды из конфигурации."""
-        try:
-            with open("config.txt", "r") as f:
-                return f.readline().strip()
-        except FileNotFoundError:
-            logger.error("❌ Файл конфигурации не найден!")
-            sys.exit(1)
 
     async def initialize(self) -> None:
         """Инициализация бота и загрузка необходимых данных."""
