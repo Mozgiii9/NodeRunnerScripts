@@ -74,30 +74,25 @@ case $choice in
     2)
         echo -e "\n${BOLD}${BLUE}🚀 Запуск ноды Privasea...${NC}\n"
 
+        echo -e "${WHITE}[${CYAN}1/3${WHITE}] ${GREEN}➜ ${WHITE}📂 Переход в директорию...${NC}"
+        cd ~/privasea
+
+        echo -e "${WHITE}[${CYAN}2/3${WHITE}] ${GREEN}➜ ${WHITE}🔑 Создание нового keystore...${NC}"
+        docker run --rm -it -v "$HOME/privasea/config:/app/config" privasea/acceleration-node-beta:latest ./node-calc new_keystore
+
+        echo -e "${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}📝 Настройка keystore...${NC}"
+        mv $HOME/privasea/config/UTC--* $HOME/privasea/config/wallet_keystore
+
+        echo -e "\n${CYAN}📄 Содержимое wallet_keystore(вставьте в MetaMask):${NC}"
+        cat $HOME/privasea/config/wallet_keystore
+        echo -e "\n"
+
         echo -e "${YELLOW}🔑 Введите пароль от кошелька:${NC}"
         read -s -p "➜ " PASS
         echo
 
-        echo -e "\n${YELLOW}🌐 Введите порт для запуска ноды (нажмите Enter для использования порта по умолчанию 8181):${NC}"
-        read -p "➜ " PORT
-        if [ -z "$PORT" ]; then
-            PORT=8181
-        fi
-
-        # Проверка, не занят ли порт
-        if lsof -i :$PORT > /dev/null 2>&1; then
-            echo -e "${RED}❌ Ошибка: Порт $PORT уже используется${NC}"
-            echo -e "${YELLOW}💡 Попробуйте другой порт или освободите текущий${NC}"
-            exit 1
-        fi
-
-        echo -e "\n${WHITE}[${CYAN}1/1${WHITE}] ${GREEN}➜ ${WHITE}▶️  Запуск контейнера на порту $PORT...${NC}"
-        docker run -d --name privanetix-node \
-            -v "$HOME/privasea/config:/app/config" \
-            -e KEYSTORE_PASSWORD=$PASS \
-            -p $PORT:8181 \
-            privasea/acceleration-node-beta:latest
-
+        echo -e "\n${WHITE}[${CYAN}+${WHITE}] ${GREEN}➜ ${WHITE}▶️  Запуск контейнера...${NC}"
+        docker run -d --name privanetix-node -v "$HOME/privasea/config:/app/config" -e KEYSTORE_PASSWORD=$PASS privasea/acceleration-node-beta:latest
         if [ $? -ne 0 ]; then
             echo -e "${RED}❌ Ошибка: Не удалось запустить контейнер${NC}"
             exit 1
