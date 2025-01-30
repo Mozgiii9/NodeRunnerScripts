@@ -34,8 +34,8 @@ update_mainnet_chain_ids() {
     local temp_file="${config_path}.tmp"
     
     # Заменяем значения Chain ID
-    sed -e 's/l1_chain_id: .*/l1_chain_id: 1/' \
-        -e 's/l2_chain_id: .*/l2_chain_id: 2741/' \
+    sed -e 's/EN_L1_CHAIN_ID: .*/EN_L1_CHAIN_ID: 1/' \
+        -e 's/EN_L2_CHAIN_ID: .*/EN_L2_CHAIN_ID: 2741/' \
         "$config_path" > "$temp_file"
     
     # Проверяем успешность операции
