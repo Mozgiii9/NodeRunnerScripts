@@ -28,7 +28,7 @@ update_mainnet_chain_ids() {
     if [ ! -f "$config_path" ]; then
         print_color "$COLOR_RED" "❌ Файл конфигурации не найден: $config_path"
         return 1
-    }
+    fi
     
     # Создаем временный файл
     local temp_file="${config_path}.tmp"
