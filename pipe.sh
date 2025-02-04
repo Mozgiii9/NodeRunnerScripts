@@ -52,10 +52,11 @@ print_menu() {
     echo -e "${BOLD}${BLUE}🔧 Доступные действия:${NC}\n"
     echo -e "${WHITE}[${CYAN}1${WHITE}] ${GREEN}➜ ${WHITE}🛠️  Установка ноды${NC}"
     echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}📋 Проверка статуса${NC}"
-    echo -e "${WHITE}[${CYAN}3${WHITE}] ${GREEN}➜ ${WHITE}💰 Проверка поинтов${NC}"
-    echo -e "${WHITE}[${CYAN}4${WHITE}] ${GREEN}➜ ${WHITE}🔄 Обновление ноды${NC}"
-    echo -e "${WHITE}[${CYAN}5${WHITE}] ${GREEN}➜ ${WHITE}🗑️  Удаление ноды${NC}"
-    echo -e "${WHITE}[${CYAN}6${WHITE}] ${GREEN}➜ ${WHITE}🚪 Выход${NC}\n"
+    echo -e "${WHITE}[${CYAN}3${WHITE}] ${GREEN}➜ ${WHITE}📜 Просмотр логов${NC}"
+    echo -e "${WHITE}[${CYAN}4${WHITE}] ${GREEN}➜ ${WHITE}💰 Проверка поинтов${NC}"
+    echo -e "${WHITE}[${CYAN}5${WHITE}] ${GREEN}➜ ${WHITE}🔄 Обновление ноды${NC}"
+    echo -e "${WHITE}[${CYAN}6${WHITE}] ${GREEN}➜ ${WHITE}🗑️  Удаление ноды${NC}"
+    echo -e "${WHITE}[${CYAN}7${WHITE}] ${GREEN}➜ ${WHITE}🚪 Выход${NC}\n"
 }
 
 # Функция для обработки CTRL+C
@@ -144,7 +145,23 @@ check_status() {
     ./pop --status
     cd ..
     
-    sleep 3
+    sleep 10
+    print_menu
+}
+
+# Функция для просмотра логов
+view_logs() {
+    echo -e "\n${BOLD}${BLUE}📜 Просмотр логов Pipe...${NC}\n"
+    
+    # Установка обработчика CTRL+C
+    trap ctrl_c_handler INT
+    
+    echo -e "${YELLOW}Для выхода из просмотра логов нажмите CTRL+C${NC}\n"
+    sudo journalctl -u pipe-pop -f --no-hostname -o cat
+    
+    # Удаление обработчика CTRL+C после выхода из логов
+    trap - INT
+    
     print_menu
 }
 
@@ -155,7 +172,7 @@ check_points() {
     ./pop --points
     cd ..
     
-    sleep 3
+    sleep 10
     print_menu
 }
 
@@ -203,7 +220,7 @@ remove_node() {
 # Основной цикл программы
 while true; do
     print_menu
-    echo -e "${BOLD}${BLUE}📝 Введите номер действия [1-6]:${NC} "
+    echo -e "${BOLD}${BLUE}📝 Введите номер действия [1-7]:${NC} "
     read -p "➜ " choice
 
     case $choice in
@@ -214,20 +231,23 @@ while true; do
             check_status
             ;;
         3)
-            check_points
+            view_logs
             ;;
         4)
-            update_node
+            check_points
             ;;
         5)
-            remove_node
+            update_node
             ;;
         6)
+            remove_node
+            ;;
+        7)
             echo -e "\n${GREEN}👋 До свидания!${NC}\n"
             exit 0
             ;;
         *)
-            echo -e "\n${RED}❌ Ошибка: Неверный выбор! Пожалуйста, введите номер от 1 до 6.${NC}\n"
+            echo -e "\n${RED}❌ Ошибка: Неверный выбор! Пожалуйста, введите номер от 1 до 7.${NC}\n"
             sleep 2
             print_menu
             ;;
