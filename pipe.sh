@@ -78,7 +78,7 @@ install_node() {
     cd ~/pipenetwork
 
     echo -e "${WHITE}[${CYAN}3/5${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка файлов...${NC}"
-    wget https://dl.pipecdn.app/v0.2.2/pop
+    wget https://dl.pipecdn.app/v0.2.4/pop
     chmod +x pop
 
     echo -e "${WHITE}[${CYAN}4/5${WHITE}] ${GREEN}➜ ${WHITE}⚙️ Настройка параметров...${NC}"
@@ -181,7 +181,7 @@ update_node() {
     echo -e "\n${BOLD}${BLUE}🔄 Обновление ноды Pipe...${NC}\n"
     sudo systemctl stop pipe-pop
     rm -f $HOME/pipenetwork/pop
-    curl -o $HOME/pipenetwork/pop https://dl.pipecdn.app/v0.2.2/pop
+    curl -o $HOME/pipenetwork/pop https://dl.pipecdn.app/v0.2.4/pop
     chmod +x $HOME/pipenetwork/pop
     $HOME/pipenetwork/pop --refresh
     
