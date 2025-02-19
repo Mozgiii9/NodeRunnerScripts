@@ -36,41 +36,49 @@ setup_traffic_forwarding() {
     # Создаем резервную копию оригинального конфига
     cp /etc/proxychains4.conf /etc/proxychains4.conf.backup
     
-    # Настраиваем proxychains
-    cat > /etc/proxychains4.conf << EOF
-# proxychains.conf VER 4.x
-#
-# Проксификация всего трафика через заданный прокси
+    # Настраиваем proxychains без использования 'cat <<EOF'
+    echo '# proxychains.conf VER 4.x' > /etc/proxychains4.conf
+    echo '#' >> /etc/proxychains4.conf
+    echo '# Проксификация всего трафика через заданный прокси' >> /etc/proxychains4.conf
+    echo '' >> /etc/proxychains4.conf
+    echo '# Строгий режим - если прокси не работает, соединение прерывается' >> /etc/proxychains4.conf
+    echo 'strict_chain' >> /etc/proxychains4.conf
+    echo '' >> /etc/proxychains4.conf
+    echo '# Проксификация DNS запросов' >> /etc/proxychains4.conf
+    echo 'proxy_dns' >> /etc/proxychains4.conf
+    echo '' >> /etc/proxychains4.conf
+    echo '# Таймауты для TCP соединений' >> /etc/proxychains4.conf
+    echo 'tcp_read_time_out 15000' >> /etc/proxychains4.conf
+    echo 'tcp_connect_time_out 8000' >> /etc/proxychains4.conf
+    echo '' >> /etc/proxychains4.conf
+    echo '# Локальные подсети не проксируются' >> /etc/proxychains4.conf
+    echo 'localnet 127.0.0.0/255.0.0.0' >> /etc/proxychains4.conf
+    echo 'localnet 10.0.0.0/255.0.0.0' >> /etc/proxychains4.conf
+    echo 'localnet 172.16.0.0/255.240.0.0' >> /etc/proxychains4.conf
+    echo 'localnet 192.168.0.0/255.255.0.0' >> /etc/proxychains4.conf
+    echo '' >> /etc/proxychains4.conf
+    echo '# Список прокси-серверов:' >> /etc/proxychains4.conf
+    echo '[ProxyList]' >> /etc/proxychains4.conf
 
-# Строгий режим - если прокси не работает, соединение прерывается
-strict_chain
-
-# Проксификация DNS запросов
-proxy_dns
-
-# Таймауты для TCP соединений
-tcp_read_time_out 15000
-tcp_connect_time_out 8000
-
-# Локальные подсети не проксируются
-localnet 127.0.0.0/255.0.0.0
-localnet 10.0.0.0/255.0.0.0
-localnet 172.16.0.0/255.240.0.0
-localnet 192.168.0.0/255.255.0.0
-
-# Список прокси-серверов:
-[ProxyList]
-EOF
-
-# Добавляем прокси с учетом логина и пароля, если они указаны
-if [ -n "$proxy_user" ] && [ -n "$proxy_pass" ]; then
-    echo "$proxy_type $proxy_ip $proxy_port $proxy_user $proxy_pass" >> /etc/proxychains4.conf
-else
-    echo "$proxy_type $proxy_ip $proxy_port" >> /etc/proxychains4.conf
-fi
-EOF
+    # Добавляем прокси с учетом логина и пароля, если они указаны
+    if [ -n "$proxy_user" ] && [ -n "$proxy_pass" ]; then
+        echo "$proxy_type $proxy_ip $proxy_port $proxy_user $proxy_pass" >> /etc/proxychains4.conf
+    else
+        echo "$proxy_type $proxy_ip $proxy_port" >> /etc/proxychains4.conf
+    fi
 
     echo "Конфигурация proxychains обновлена."
+    
+    # Тестируем прокси перед настройкой iptables
+    echo "Тестирование прокси-соединения..."
+    if proxychains4 curl -s --connect-timeout 10 https://ifconfig.me > /dev/null; then
+        echo "Прокси-соединение работает."
+    else
+        echo "ОШИБКА: Прокси-соединение не работает. Проверьте настройки прокси и повторите попытку."
+        echo "Восстанавливаем оригинальную конфигурацию..."
+        cp /etc/proxychains4.conf.backup /etc/proxychains4.conf
+        exit 1
+    fi
     
     # Сбрасываем правила iptables
     iptables -F
@@ -84,6 +92,9 @@ EOF
     
     # Разрешаем установленные соединения
     iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+    
+    # Обязательно разрешаем SSH соединение, чтобы не потерять доступ
+    iptables -t nat -A OUTPUT -p tcp --dport 22 -j ACCEPT
     
     # Исключаем определенные IP из проксирования
     if [ -n "$excluded_ips" ]; then
@@ -106,53 +117,47 @@ EOF
     fi
     
     # Создаем скрипт для восстановления соединения после перезагрузки
-    cat > /usr/local/bin/restore-proxy-connection.sh << EOF
-#!/bin/bash
-# Скрипт восстановления правил iptables для проксирования
-sleep 10
-iptables -t nat -A OUTPUT -p tcp -j REDIRECT --to-port $local_port
-EOF
+    echo '#!/bin/bash' > /usr/local/bin/restore-proxy-connection.sh
+    echo '# Скрипт восстановления правил iptables для проксирования' >> /usr/local/bin/restore-proxy-connection.sh
+    echo 'sleep 10' >> /usr/local/bin/restore-proxy-connection.sh
+    echo "iptables -t nat -A OUTPUT -p tcp -j REDIRECT --to-port $local_port" >> /usr/local/bin/restore-proxy-connection.sh
     chmod +x /usr/local/bin/restore-proxy-connection.sh
     
     # Создаем сервис для восстановления соединения
-    cat > /etc/systemd/system/restore-proxy-connection.service << EOF
-[Unit]
-Description=Restore Proxy Connection Rules
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/restore-proxy-connection.sh
-RemainAfterExit=true
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    echo '[Unit]' > /etc/systemd/system/restore-proxy-connection.service
+    echo 'Description=Restore Proxy Connection Rules' >> /etc/systemd/system/restore-proxy-connection.service
+    echo 'After=network.target' >> /etc/systemd/system/restore-proxy-connection.service
+    echo '' >> /etc/systemd/system/restore-proxy-connection.service
+    echo '[Service]' >> /etc/systemd/system/restore-proxy-connection.service
+    echo 'Type=oneshot' >> /etc/systemd/system/restore-proxy-connection.service
+    echo 'ExecStart=/usr/local/bin/restore-proxy-connection.sh' >> /etc/systemd/system/restore-proxy-connection.service
+    echo 'RemainAfterExit=true' >> /etc/systemd/system/restore-proxy-connection.service
+    echo '' >> /etc/systemd/system/restore-proxy-connection.service
+    echo '[Install]' >> /etc/systemd/system/restore-proxy-connection.service
+    echo 'WantedBy=multi-user.target' >> /etc/systemd/system/restore-proxy-connection.service
 
     systemctl daemon-reload
     systemctl enable restore-proxy-connection.service
     
-    # Создаем сервис для автозапуска прокси-сервера
-    cat > /etc/systemd/system/proxychains-redirect.service << EOF
-[Unit]
-Description=Proxychains Traffic Redirector
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/proxychains4 -f /etc/proxychains4.conf /usr/bin/socat TCP4-LISTEN:$local_port,fork,reuseaddr TCP4:$proxy_ip:$proxy_port
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
     # Устанавливаем socat если он не установлен
     if ! command -v socat &> /dev/null; then
         echo "Устанавливаем socat..."
         apt install -y socat
     fi
+    
+    # Создаем сервис для перенаправления
+    echo '[Unit]' > /etc/systemd/system/proxychains-redirect.service
+    echo 'Description=Proxychains Traffic Redirector' >> /etc/systemd/system/proxychains-redirect.service
+    echo 'After=network.target' >> /etc/systemd/system/proxychains-redirect.service
+    echo '' >> /etc/systemd/system/proxychains-redirect.service
+    echo '[Service]' >> /etc/systemd/system/proxychains-redirect.service
+    echo 'Type=simple' >> /etc/systemd/system/proxychains-redirect.service
+    echo "ExecStart=/usr/bin/proxychains4 -f /etc/proxychains4.conf /usr/bin/socat TCP4-LISTEN:$local_port,fork,reuseaddr TCP4:$proxy_ip:$proxy_port" >> /etc/systemd/system/proxychains-redirect.service
+    echo 'Restart=always' >> /etc/systemd/system/proxychains-redirect.service
+    echo 'RestartSec=10' >> /etc/systemd/system/proxychains-redirect.service
+    echo '' >> /etc/systemd/system/proxychains-redirect.service
+    echo '[Install]' >> /etc/systemd/system/proxychains-redirect.service
+    echo 'WantedBy=multi-user.target' >> /etc/systemd/system/proxychains-redirect.service
     
     # Активируем и запускаем сервис
     systemctl daemon-reload
@@ -183,7 +188,7 @@ read -p "Исключенные IP (через запятую, например 
 setup_traffic_forwarding "$proxy_type" "$proxy_ip" "$proxy_port" "$proxy_user" "$proxy_pass" "$local_port" "$excluded_ips"
 
 echo ""
-echo "Для проверки работы прокси выполните:"
+echo "Для проверки работы прокси выполните в другой сессии:"
 echo "curl -s https://ifconfig.me"
 echo ""
 echo "Для восстановления настроек выполните:"
@@ -193,6 +198,5 @@ echo "systemctl disable restore-proxy-connection.service"
 echo "iptables -F && iptables -t nat -F"
 echo "cp /etc/proxychains4.conf.backup /etc/proxychains4.conf"
 echo ""
-echo "ВАЖНО: Скрипт настроен так, чтобы соединение не прерывалось"
-echo "Если вы хотите проверить работу прокси, выполните в другой сессии:"
-echo "curl -s https://ifconfig.me"
+echo "ВАЖНО: Проверьте, что вы можете подключиться к серверу после настройки."
+echo "Если подключение пропадает, возможно потребуется проверить настройки прокси или добавить IP SSH-соединения в исключения."
