@@ -75,29 +75,81 @@ install_node() {
     export PATH="$HOME/.local/bin:$PATH"
     
     echo -e "${WHITE}[${CYAN}5/5${WHITE}] ${GREEN}➜ ${WHITE}💾 Настройка SWAP и CLI...${NC}"
-    # Управление screen сессией
-    SESSION_NAME="nexus"
-    if screen -ls | grep -q "$SESSION_NAME"; then
-        echo -e "${YELLOW}⚠️ Сессия $SESSION_NAME уже существует. Перезапуск...${NC}"
-        screen -S "$SESSION_NAME" -X quit
-    fi
     
+    # Настройка SWAP с проверками
+    echo -e "${CYAN}⚡ Настройка файла подкачки...${NC}"
+    
+    # Проверяем, существует ли уже файл подкачки
+    if [ -f /swapfile ]; then
+        echo -e "${YELLOW}⚠️ Найден существующий файл подкачки. Отключаем...${NC}"
+        # Если существует, выключаем его перед манипуляциями
+        sudo swapoff /swapfile
+        # Проверяем, не используется ли файл другими процессами
+        echo -e "${CYAN}🔍 Проверка использования файла подкачки...${NC}"
+        sudo lsof /swapfile || true
+        sleep 2
+    fi
+
+    echo -e "${CYAN}📝 Создание нового файла подкачки...${NC}"
+    # Создаем файл подкачки
+    if sudo dd if=/dev/zero of=/swapfile bs=1M count=8192 && \
+       sudo chmod 600 /swapfile && \
+       sudo mkswap /swapfile && \
+       sudo swapon /swapfile; then
+        echo -e "${GREEN}✅ Файл подкачки создан успешно${NC}"
+    else
+        echo -e "${RED}❌ Ошибка при создании файла подкачки${NC}"
+        exit 1
+    fi
+
+    # Проверяем, нет ли уже записи в fstab
+    if ! grep -q "/swapfile" /etc/fstab; then
+        echo -e "${CYAN}📝 Добавление записи в /etc/fstab...${NC}"
+        echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    else
+        echo -e "${YELLOW}ℹ️ Запись в /etc/fstab уже существует${NC}"
+    fi
+
+    # Проверяем, активирован ли swap
+    echo -e "${CYAN}🔍 Проверка статуса SWAP...${NC}"
+    sudo swapon --show
+    echo -e "${GREEN}✅ Настройка SWAP завершена${NC}"
+
+    # Управление screen сессией
+    echo -e "${CYAN}🖥️ Настройка screen сессии...${NC}"
+    SESSION_NAME="nexus"
+    
+    # Проверяем и закрываем существующую сессию
+    if screen -ls | grep -q "$SESSION_NAME"; then
+        echo -e "${YELLOW}⚠️ Найдена существующая сессия. Закрываем...${NC}"
+        screen -S "$SESSION_NAME" -X quit
+        sleep 2
+    fi
+
+    echo -e "${CYAN}📥 Установка Nexus CLI...${NC}"
+    # Создаем новую сессию и запускаем в ней установку CLI
     echo -e "${CYAN}🚀 Создание новой screen сессии...${NC}"
     screen -dmS $SESSION_NAME
 
     # Отправляем команды в screen сессию
-    screen -S $SESSION_NAME -X stuff "echo -e '${CYAN}⚡ Настройка файла подкачки...${NC}'\n"
-    screen -S $SESSION_NAME -X stuff "sudo dd if=/dev/zero of=/swapfile bs=1M count=8192 && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile && echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab\n"
-    screen -S $SESSION_NAME -X stuff "echo -e '${CYAN}📥 Установка Nexus CLI...${NC}'\n"
-    screen -S $SESSION_NAME -X stuff "curl https://cli.nexus.xyz/ | sh\n"
+    screen -S $SESSION_NAME -X stuff "echo -e '${CYAN}⚡ Установка Nexus CLI...${NC}'\n"
+    
+    # Пробуем установку сначала без прокси
+    screen -S $SESSION_NAME -X stuff "proxychains curl -sSf https://cli.nexus.xyz/ -o cli_nexus.sh && bash cli_nexus.sh\n"
 
     echo -e "\n${PURPLE}═══════════════════════════════════════════════${NC}"
     echo -e "${GREEN}✅ Нода успешно установлена!${NC}"
     echo -e "${YELLOW}📋 Управление сессией:${NC}"
     echo -e "  ${CYAN}• screen -r nexus${NC} - подключение к сессии"
-    echo -e "  ${CYAN}• CTRL + A + D${NC} - отключение от сессии"
+    echo -e "  ${CYAN}• CTRL + A + D${NC} - отключение от сессии (сессия останется активной)"
     echo -e "  ${CYAN}• screen -ls${NC} - список сессий"
+    echo -e "  ${CYAN}• exit${NC} - полное закрытие сессии"
     echo -e "${PURPLE}═══════════════════════════════════════════════${NC}"
+
+    # Автоматически подключаемся к сессии
+    echo -e "${CYAN}🔄 Подключение к сессии...${NC}"
+    sleep 2
+    screen -r $SESSION_NAME
 }
 
 # Функция обновления ноды
