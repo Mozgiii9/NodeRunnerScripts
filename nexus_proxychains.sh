@@ -193,11 +193,6 @@ install_node() {
     unzip protoc-25.2-linux-x86_64.zip -d $HOME/.local
     export PATH="$HOME/.local/bin:$PATH"
     
-    echo -e "${WHITE}[${CYAN}5/5${WHITE}] ${GREEN}➜ ${WHITE}📥 Клонирование репозитория...${NC}"
-    cd $HOME
-    proxychains4 git clone https://github.com/nexus-chain/nexus-node.git
-    cd nexus-node
-    
     # Управление screen сессией
     SESSION_NAME="nexus"
     if screen -ls | grep -q "$SESSION_NAME"; then
