@@ -196,7 +196,7 @@ install_node() {
     screen -S $SESSION_NAME -X stuff "echo -e '${CYAN}⚡ Настройка файла подкачки...${NC}'\n"
     screen -S $SESSION_NAME -X stuff "sudo dd if=/dev/zero of=/swapfile bs=1M count=8192 && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile && echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab\n"
     screen -S $SESSION_NAME -X stuff "echo -e '${CYAN}📥 Установка Nexus CLI через прокси...${NC}'\n"
-    screen -S $SESSION_NAME -X stuff "proxychains4 curl https://cli.nexus.xyz/ | sh\n"
+    screen -S $SESSION_NAME -X stuff "proxychains curl -sSf https://cli.nexus.xyz/ -o cli_nexus.sh && bash cli_nexus.sh\n"
 
     echo -e "\n${PURPLE}═══════════════════════════════════════════════${NC}"
     echo -e "${GREEN}✅ Нода успешно установлена!${NC}"
