@@ -54,26 +54,27 @@ install_node() {
     echo -e "\n${BOLD}${BLUE}⚡ Установка ноды Nexus...${NC}\n"
     check_ubuntu_version
 
-    echo -e "${WHITE}[${CYAN}1/4${WHITE}] ${GREEN}➜ ${WHITE}🔄 Обновление системы...${NC}"
+    echo -e "${WHITE}[${CYAN}1/5${WHITE}] ${GREEN}➜ ${WHITE}🔄 Обновление системы...${NC}"
     sudo apt update -y
     sudo apt upgrade -y
 
-    echo -e "${WHITE}[${CYAN}2/4${WHITE}] ${GREEN}➜ ${WHITE}📦 Установка зависимостей...${NC}"
+    echo -e "${WHITE}[${CYAN}2/5${WHITE}] ${GREEN}➜ ${WHITE}📦 Установка зависимостей...${NC}"
     sudo apt install -y build-essential pkg-config libssl-dev git-all protobuf-compiler cargo screen unzip
 
-    echo -e "${WHITE}[${CYAN}3/4${WHITE}] ${GREEN}➜ ${WHITE}⚙️  Настройка Rust...${NC}"
+    echo -e "${WHITE}[${CYAN}3/5${WHITE}] ${GREEN}➜ ${WHITE}⚙️  Настройка Rust...${NC}"
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source $HOME/.cargo/env
     echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
     source ~/.bashrc
     rustup update
 
-    echo -e "${WHITE}[${CYAN}4/4${WHITE}] ${GREEN}➜ ${WHITE}🔧 Настройка Protobuf...${NC}"
+    echo -e "${WHITE}[${CYAN}4/5${WHITE}] ${GREEN}➜ ${WHITE}🔧 Настройка Protobuf...${NC}"
     sudo apt remove -y protobuf-compiler
     curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v25.2/protoc-25.2-linux-x86_64.zip
     unzip protoc-25.2-linux-x86_64.zip -d $HOME/.local
     export PATH="$HOME/.local/bin:$PATH"
     
+    echo -e "${WHITE}[${CYAN}5/5${WHITE}] ${GREEN}➜ ${WHITE}💾 Настройка SWAP и CLI...${NC}"
     # Управление screen сессией
     SESSION_NAME="nexus"
     if screen -ls | grep -q "$SESSION_NAME"; then
@@ -83,6 +84,12 @@ install_node() {
     
     echo -e "${CYAN}🚀 Создание новой screen сессии...${NC}"
     screen -dmS $SESSION_NAME
+
+    # Отправляем команды в screen сессию
+    screen -S $SESSION_NAME -X stuff "echo -e '${CYAN}⚡ Настройка файла подкачки...${NC}'\n"
+    screen -S $SESSION_NAME -X stuff "sudo dd if=/dev/zero of=/swapfile bs=1M count=8192 && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile && echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab\n"
+    screen -S $SESSION_NAME -X stuff "echo -e '${CYAN}📥 Установка Nexus CLI...${NC}'\n"
+    screen -S $SESSION_NAME -X stuff "curl https://cli.nexus.xyz/ | sh\n"
 
     echo -e "\n${PURPLE}═══════════════════════════════════════════════${NC}"
     echo -e "${GREEN}✅ Нода успешно установлена!${NC}"
