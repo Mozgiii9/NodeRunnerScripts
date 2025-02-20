@@ -34,7 +34,7 @@ print_menu() {
     echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}⬆️  Обновление ноды${NC}"
     echo -e "${WHITE}[${CYAN}3${WHITE}] ${GREEN}➜ ${WHITE}📋 Управление сессией${NC}"
     echo -e "${WHITE}[${CYAN}4${WHITE}] ${GREEN}➜ ${WHITE}🔄 Настройка прокси${NC}"
-    echo -e "${WHITE}[${CYAN}5${WHITE}] ${GREEN}➜ ${WHITE}🌐 Проверка прокси${NC}" 
+    echo -e "${WHITE}[${CYAN}5${WHITE}] ${GREEN}➜ ${WHITE}🌐 Проверка прокси${NC}"
     echo -e "${WHITE}[${CYAN}6${WHITE}] ${GREEN}➜ ${WHITE}🗑️  Удаление ноды${NC}"
     echo -e "${WHITE}[${CYAN}7${WHITE}] ${GREEN}➜ ${WHITE}🚪 Выход${NC}\n"
 }
@@ -66,7 +66,6 @@ install_proxychains() {
     else
         echo -e "${GREEN}✅ Proxychains уже установлен${NC}"
     fi
-    
     return 0
 }
 
@@ -124,21 +123,6 @@ EOF
     fi
     
     echo -e "${GREEN}✅ Настройка прокси завершена${NC}"
-    
-    # Создание скрипта для запуска через прокси
-    echo -e "${WHITE}[${CYAN}*${WHITE}] ${GREEN}➜ ${WHITE}📝 Создание скрипта запуска через прокси...${NC}"
-    
-    cat > $HOME/start-nexus-proxy.sh << EOF
-#!/bin/bash
-# Скрипт запуска ноды Nexus через proxychains
-cd \$HOME
-source \$HOME/.cargo/env
-proxychains4 cargo run --release
-EOF
-    
-    chmod +x $HOME/start-nexus-proxy.sh
-    
-    echo -e "${GREEN}✅ Скрипт запуска через прокси создан: ${CYAN}$HOME/start-nexus-proxy.sh${NC}"
 }
 
 # Проверка прокси
@@ -159,20 +143,24 @@ check_proxy() {
     proxychains4 curl -s https://ifconfig.me
     echo ""
     
-    echo -e "${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}🔍 DNS через прокси:${NC}"
-    proxychains4 ping -c 2 github.com
+    echo -e "${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}🔍 Проверка соединения:${NC}"
+    proxychains4 curl -s https://cli.nexus.xyz/
     
     echo -e "\n${GREEN}✅ Проверка завершена${NC}"
 }
 
 # Функция установки ноды
 install_node() {
-    echo -e "\n${BOLD}${BLUE}⚡ Установка ноды Nexus...${NC}\n"
+    echo -e "\n${BOLD}${BLUE}⚡ Установка ноды Nexus через прокси...${NC}\n"
     check_ubuntu_version
-    
-    # Установка proxychains
-    install_proxychains
-    
+
+    # Проверка настройки прокси
+    if ! command -v proxychains4 &> /dev/null; then
+        echo -e "${RED}❌ Proxychains не установлен${NC}"
+        echo -e "${YELLOW}Пожалуйста, сначала настройте прокси (пункт 4)${NC}"
+        return 1
+    fi
+
     echo -e "${WHITE}[${CYAN}1/5${WHITE}] ${GREEN}➜ ${WHITE}🔄 Обновление системы...${NC}"
     sudo apt update -y
     sudo apt upgrade -y
@@ -180,7 +168,7 @@ install_node() {
     echo -e "${WHITE}[${CYAN}2/5${WHITE}] ${GREEN}➜ ${WHITE}📦 Установка зависимостей...${NC}"
     sudo apt install -y build-essential pkg-config libssl-dev git-all protobuf-compiler cargo screen unzip
 
-    echo -e "${WHITE}[${CYAN}3/5${WHITE}] ${GREEN}➜ ${WHITE}⚙️  Настройка Rust через прокси...${NC}"
+    echo -e "${WHITE}[${CYAN}3/5${WHITE}] ${GREEN}➜ ${WHITE}⚙️  Настройка Rust...${NC}"
     proxychains4 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source $HOME/.cargo/env
     echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
@@ -193,6 +181,7 @@ install_node() {
     unzip protoc-25.2-linux-x86_64.zip -d $HOME/.local
     export PATH="$HOME/.local/bin:$PATH"
     
+    echo -e "${WHITE}[${CYAN}5/5${WHITE}] ${GREEN}➜ ${WHITE}💾 Настройка SWAP и CLI...${NC}"
     # Управление screen сессией
     SESSION_NAME="nexus"
     if screen -ls | grep -q "$SESSION_NAME"; then
@@ -201,7 +190,13 @@ install_node() {
     fi
     
     echo -e "${CYAN}🚀 Создание новой screen сессии...${NC}"
-    screen -dmS $SESSION_NAME $HOME/start-nexus-proxy.sh
+    screen -dmS $SESSION_NAME
+
+    # Отправляем команды в screen сессию
+    screen -S $SESSION_NAME -X stuff "echo -e '${CYAN}⚡ Настройка файла подкачки...${NC}'\n"
+    screen -S $SESSION_NAME -X stuff "sudo dd if=/dev/zero of=/swapfile bs=1M count=8192 && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile && echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab\n"
+    screen -S $SESSION_NAME -X stuff "echo -e '${CYAN}📥 Установка Nexus CLI через прокси...${NC}'\n"
+    screen -S $SESSION_NAME -X stuff "proxychains4 curl https://cli.nexus.xyz/ | sh\n"
 
     echo -e "\n${PURPLE}═══════════════════════════════════════════════${NC}"
     echo -e "${GREEN}✅ Нода успешно установлена!${NC}"
@@ -214,31 +209,7 @@ install_node() {
 
 # Функция обновления ноды
 update_node() {
-    echo -e "\n${BOLD}${BLUE}⚡ Обновление ноды Nexus...${NC}\n"
-    
-    if [ ! -d "$HOME/nexus-node" ]; then
-        echo -e "${RED}❌ Директория ноды не найдена. Сначала установите ноду.${NC}"
-        return 1
-    fi
-    
-    # Остановка работающей ноды
-    SESSION_NAME="nexus"
-    if screen -ls | grep -q "$SESSION_NAME"; then
-        echo -e "${YELLOW}⚠️ Останавливаем текущую сессию...${NC}"
-        screen -S "$SESSION_NAME" -X quit
-    fi
-    
-    echo -e "${WHITE}[${CYAN}1/3${WHITE}] ${GREEN}➜ ${WHITE}📥 Обновление репозитория...${NC}"
-    cd $HOME/nexus-node
-    proxychains4 git pull
-    
-    echo -e "${WHITE}[${CYAN}2/3${WHITE}] ${GREEN}➜ ${WHITE}⚙️ Обновление зависимостей...${NC}"
-    proxychains4 rustup update
-    
-    echo -e "${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}🚀 Перезапуск ноды...${NC}"
-    screen -dmS $SESSION_NAME $HOME/start-nexus-proxy.sh
-    
-    echo -e "\n${GREEN}✅ Нода успешно обновлена!${NC}"
+    echo -e "\n${BOLD}${GREEN}✅ У вас установлена актуальная версия ноды Nexus${NC}\n"
 }
 
 # Функция управления сессией
@@ -268,13 +239,13 @@ remove_node() {
     fi
 
     echo -e "${WHITE}[${CYAN}2/3${WHITE}] ${GREEN}➜ ${WHITE}🗑️ Удаление файлов...${NC}"
-    rm -rf $HOME/nexus-node
-    rm -rf $HOME/.nexus
+    rm -rf .nexus/
     rm -f $HOME/start-nexus-proxy.sh
 
     echo -e "${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}⚙️ Восстановление конфигурации proxychains...${NC}"
     if [ -f "/etc/proxychains4.conf.backup" ]; then
         sudo cp /etc/proxychains4.conf.backup /etc/proxychains4.conf
+        sudo rm /etc/proxychains4.conf.backup
         echo -e "${GREEN}✅ Конфигурация proxychains восстановлена${NC}"
     fi
 
