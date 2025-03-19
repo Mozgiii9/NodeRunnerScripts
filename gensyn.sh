@@ -45,6 +45,19 @@ install_dependencies() {
     success_message "Базовые зависимости установлены"
 }
 
+# Функция для проверки и определения правильного формата docker-compose команды
+check_docker_compose_format() {
+    info_message "Проверка формата docker-compose команды..."
+    # Проверяем, работает ли docker compose
+    if docker compose version &>/dev/null; then
+        DOCKER_COMPOSE_CMD="docker compose"
+        success_message "Будет использоваться команда: docker compose"
+    else
+        DOCKER_COMPOSE_CMD="docker-compose"
+        success_message "Будет использоваться команда: docker-compose"
+    fi
+}
+
 # Функция для установки Docker и Docker Compose
 install_docker() {
     info_message "Проверка наличия Docker..."
@@ -65,6 +78,9 @@ install_docker() {
     else
         success_message "Docker Compose уже установлен"
     fi
+
+    # Определяем правильный формат команды docker-compose
+    check_docker_compose_format
 
     sudo usermod -aG docker $USER
     success_message "Пользователь добавлен в группу docker"
@@ -173,18 +189,18 @@ install_node() {
     sleep 1
 
     echo -e "${WHITE}[${CYAN}6/6${WHITE}] ${GREEN}➜ ${WHITE}🚀 Запуск контейнеров...${NC}"
-    docker compose pull
-    docker compose up --build -d
+    $DOCKER_COMPOSE_CMD pull
+    $DOCKER_COMPOSE_CMD up -d
     success_message "Контейнеры успешно запущены"
 
     echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
     echo -e "${GREEN}✨ Нода Gensyn успешно установлена и запущена!${NC}"
     echo -e "${YELLOW}📝 Команда для проверки логов:${NC}"
-    echo -e "${CYAN}cd rl-swarm && docker compose logs -f swarm_node${NC}"
+    echo -e "${CYAN}cd rl-swarm && $DOCKER_COMPOSE_CMD logs swarm_node${NC}"
     echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
     
     info_message "Отображение логов ноды..."
-    docker compose logs -f swarm_node
+    $DOCKER_COMPOSE_CMD logs swarm_node
 }
 
 # Функция для обновления ноды
@@ -200,24 +216,27 @@ update_node() {
     cd rl-swarm
     success_message "Перешли в директорию ноды"
     
+    # Определяем правильный формат команды docker-compose
+    check_docker_compose_format
+    
     echo -e "${WHITE}[${CYAN}2/3${WHITE}] ${GREEN}➜ ${WHITE}⬆️ Обновление образа...${NC}"
     VER=rl-swarm:v0.0.2
     sed -i "s#\(image: europe-docker.pkg.dev/gensyn-public-b7d9/public/\).*#\1$VER#g" docker-compose.yaml
-    docker compose pull
+    $DOCKER_COMPOSE_CMD pull
     success_message "Образ обновлен до версии $VER"
     
     echo -e "${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}🔄 Перезапуск контейнеров...${NC}"
-    docker compose up -d --force-recreate
+    $DOCKER_COMPOSE_CMD up -d --force-recreate
     success_message "Контейнеры перезапущены с обновленной версией"
     
     echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
     echo -e "${GREEN}✨ Нода Gensyn успешно обновлена!${NC}"
     echo -e "${YELLOW}📝 Команда для проверки логов:${NC}"
-    echo -e "${CYAN}cd rl-swarm && docker compose logs -f swarm_node${NC}"
+    echo -e "${CYAN}cd rl-swarm && $DOCKER_COMPOSE_CMD logs swarm_node${NC}"
     echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
     
     info_message "Отображение логов ноды..."
-    docker compose logs -f swarm_node
+    $DOCKER_COMPOSE_CMD logs swarm_node
 }
 
 # Функция для проверки логов
@@ -230,8 +249,12 @@ check_logs() {
     fi
     
     cd rl-swarm
+    
+    # Определяем правильный формат команды docker-compose
+    check_docker_compose_format
+    
     info_message "Отображение логов ноды..."
-    docker compose logs -f swarm_node
+    $DOCKER_COMPOSE_CMD logs swarm_node
 }
 
 # Функция для рестарта ноды
@@ -245,8 +268,11 @@ restart_node() {
     
     cd rl-swarm
     
+    # Определяем правильный формат команды docker-compose
+    check_docker_compose_format
+    
     echo -e "${WHITE}[${CYAN}1/1${WHITE}] ${GREEN}➜ ${WHITE}🔄 Перезапуск контейнеров...${NC}"
-    docker compose restart
+    $DOCKER_COMPOSE_CMD restart
     success_message "Контейнеры успешно перезапущены"
     
     echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
@@ -254,7 +280,7 @@ restart_node() {
     echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
     
     info_message "Отображение логов ноды..."
-    docker compose logs -f swarm_node
+    $DOCKER_COMPOSE_CMD logs swarm_node
 }
 
 # Функция для удаления ноды
@@ -266,9 +292,13 @@ remove_node() {
         return 0
     fi
     
-    echo -e "${WHITE}[${CYAN}1/2${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка контейнеров...${NC}"
     cd rl-swarm
-    docker compose down -v
+    
+    # Определяем правильный формат команды docker-compose
+    check_docker_compose_format
+    
+    echo -e "${WHITE}[${CYAN}1/2${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка контейнеров...${NC}"
+    $DOCKER_COMPOSE_CMD down -v
     success_message "Контейнеры остановлены и удалены"
     
     echo -e "${WHITE}[${CYAN}2/2${WHITE}] ${GREEN}➜ ${WHITE}🗑️ Удаление файлов...${NC}"
