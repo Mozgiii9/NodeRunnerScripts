@@ -51,7 +51,7 @@ print_menu() {
     
     echo -e "${BOLD}${BLUE}🔧 Доступные действия:${NC}\n"
     echo -e "${WHITE}[${CYAN}1${WHITE}] ${GREEN}➜ ${WHITE}🛠️  Установка ноды${NC}"
-    echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}⬆️  Обновление ноды${NC}"
+    echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}⬆️  Откат на версию v0.53.1${NC}"
     echo -e "${WHITE}[${CYAN}3${WHITE}] ${GREEN}➜ ${WHITE}📋 Проверка логов${NC}"
     echo -e "${WHITE}[${CYAN}4${WHITE}] ${GREEN}➜ ${WHITE}🔄 Перезапуск ноды${NC}"
     echo -e "${WHITE}[${CYAN}5${WHITE}] ${GREEN}➜ ${WHITE}🗑️  Удаление ноды${NC}"
@@ -90,15 +90,14 @@ install_node() {
     figlet -f /usr/share/figlet/starwars.flf 
 
     echo -e "${WHITE}[${CYAN}2/6${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка актуальной версии...${NC}"
-    LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep 'tag_name' | cut -d\" -f4)
-    EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/${LATEST_VERSION}/executor-linux-${LATEST_VERSION}.tar.gz"
-    curl -L -o executor-linux-${LATEST_VERSION}.tar.gz $EXECUTOR_URL
-    success_message "Бинарный файл загружен: $LATEST_VERSION"
+    EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/v0.53.1/executor-linux-v0.53.1.tar.gz"
+    curl -L -o executor-linux-v0.53.1.tar.gz $EXECUTOR_URL
+    success_message "Бинарный файл успешно загружен!"
     sleep 1
 
     echo -e "${WHITE}[${CYAN}3/6${WHITE}] ${GREEN}➜ ${WHITE}📦 Распаковка архива...${NC}"
-    tar -xzvf executor-linux-${LATEST_VERSION}.tar.gz
-    rm -rf executor-linux-${LATEST_VERSION}.tar.gz
+    tar -xzvf executor-linux-v0.53.1.tar.gz
+    rm -rf executor-linux-v0.53.1.tar.gz
     success_message "Архив распакован"
     sleep 1
 
@@ -179,7 +178,7 @@ EOT"
 
 # Функция для обновления ноды
 update_node() {
-    echo -e "\n${BOLD}${BLUE}⬆️ Обновление ноды t3rn...${NC}\n"
+    echo -e "\n${BOLD}${BLUE}⬆️ Откат на версию v0.53.1 запущен...${NC}\n"
     
     echo -e "${WHITE}[${CYAN}1/4${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка сервиса...${NC}"
     sudo systemctl stop t3rn
@@ -193,12 +192,11 @@ update_node() {
     sleep 1
     
     echo -e "${WHITE}[${CYAN}3/4${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка новой версии...${NC}"
-    LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep 'tag_name' | cut -d\" -f4)
-    EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/${LATEST_VERSION}/executor-linux-${LATEST_VERSION}.tar.gz"
-    curl -L -o executor-linux-${LATEST_VERSION}.tar.gz $EXECUTOR_URL
-    tar -xzvf executor-linux-${LATEST_VERSION}.tar.gz
-    rm -rf executor-linux-${LATEST_VERSION}.tar.gz
-    success_message "Новая версия загружена: $LATEST_VERSION"
+    EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/v0.53.1/executor-linux-v0.53.1.tar.gz"
+    curl -L -o executor-linux-v0.53.1.tar.gz $EXECUTOR_URL
+    tar -xzvf executor-linux-v0.53.1.tar.gz
+    rm -rf executor-linux-v0.53.1.tar.gz
+    success_message "Откат успешно установлен. Версия ноды T3rn: v0.53.1"
     sleep 1
     
     echo -e "${WHITE}[${CYAN}4/4${WHITE}] ${GREEN}➜ ${WHITE}⚙️ Обновление конфигурации...${NC}"
