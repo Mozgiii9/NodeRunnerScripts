@@ -68,9 +68,12 @@ install_soundness() {
 # Очистка экрана
 clear
 
+# Отображение логотипа из внешнего источника
+curl -s https://raw.githubusercontent.com/Mozgiii9/NodeRunnerScripts/refs/heads/main/logo.sh | bash
+
 # Отображение логотипа и заголовка
 echo -e "\n${BOLD}${WHITE}╔════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}${WHITE}║     🚀 SOUNDLESS LAYER INSTALLER       ║${NC}"
+echo -e "${BOLD}${WHITE}║     🚀 SOUNDNESS LAYER INSTALLER       ║${NC}"
 echo -e "${BOLD}${WHITE}╚════════════════════════════════════════╝${NC}\n"
 
 # Основная часть скрипта
