@@ -1,67 +1,129 @@
 #!/bin/bash
-# Цвета
+
+# Определение цветов для более информативного вывода
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-ORANGE='\033[38;5;214m'
 YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
-WHITE='\033[1;37m'
+WHITE='\033[0;37m'
+ORANGE='\033[0;38;5;208m'
+NC='\033[0m' # No Color
 BOLD='\033[1m'
-NC='\033[0m' # Без цвета
+
+# Создаем директорию для логов
+mkdir -p "$HOME/t3rn"
+
+# Определяем пути к файлам логов
+SETUP_LOG="$HOME/t3rn/setup.log"
+NODE_LOG="$HOME/t3rn/node.log"
+
+# Инициализируем лог-файл установки, если он не существует
+if [ ! -f "$SETUP_LOG" ]; then
+    touch "$SETUP_LOG"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Инициализация лог-файла установки" >> "$SETUP_LOG"
+fi
+
+# Инициализируем лог-файл ноды, если он не существует
+if [ ! -f "$NODE_LOG" ]; then
+    touch "$NODE_LOG"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Инициализация лог-файла ноды" >> "$NODE_LOG"
+fi
+
+# Создаем функцию для логирования в файл без вывода на экран
+log_to_file() {
+    local message="$1"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $message" >> "$SETUP_LOG"
+}
 
 # Функция для отображения успешных сообщений
 success_message() {
     echo -e "${GREEN}[✅] $1${NC}"
+    log_to_file "[SUCCESS] $1"
 }
 
 # Функция для отображения информационных сообщений
 info_message() {
     echo -e "${CYAN}[ℹ️] $1${NC}"
+    log_to_file "[INFO] $1"
 }
 
 # Функция для отображения ошибок
 error_message() {
     echo -e "${RED}[❌] $1${NC}"
+    log_to_file "[ERROR] $1"
 }
 
 # Функция для отображения предупреждений
 warning_message() {
     echo -e "${YELLOW}[⚠️] $1${NC}"
+    log_to_file "[WARNING] $1"
 }
 
 # Очистка экрана
 clear
 
-# Вывод локального логотипа
-curl -s https://raw.githubusercontent.com/Mozgiii9/NodeRunnerScripts/refs/heads/main/logo.sh | bash
+# Функция для отображения локального ASCII логотипа
+display_logo() {
+    echo -e "${CYAN}"
+    echo -e "    ███╗   ██╗ ██████╗ ██████╗ ███████╗██████╗ ██╗   ██╗███╗   ██╗███╗   ██╗███████╗██████╗  "
+    echo -e "    ████╗  ██║██╔═══██╗██╔══██╗██╔════╝██╔══██╗██║   ██║████╗  ██║████╗  ██║██╔════╝██╔══██╗ "
+    echo -e "    ██╔██╗ ██║██║   ██║██║  ██║█████╗  ██████╔╝██║   ██║██╔██╗ ██║██╔██╗ ██║█████╗  ██████╔╝ "
+    echo -e "    ██║╚██╗██║██║   ██║██║  ██║██╔══╝  ██╔══██╗██║   ██║██║╚██╗██║██║╚██╗██║██╔══╝  ██╔══██╗ "
+    echo -e "    ██║ ╚████║╚██████╔╝██████╔╝███████╗██║  ██║╚██████╔╝██║ ╚████║██║ ╚████║███████╗██║  ██║ "
+    echo -e "    ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ "
+    echo -e "${NC}"
+    echo -e "${BOLD}${BLUE}╔═══════════════════════════════════════════╗${NC}"
+    echo -e "${BOLD}${BLUE}║             T3RN NODE MANAGER             ║${NC}"
+    echo -e "${BOLD}${BLUE}╚═══════════════════════════════════════════╝${NC}"
+    echo -e ""
+}
 
 # Функция для отображения меню
 print_menu() {
-    echo -e "\n${BOLD}${WHITE}╔════════════════════════════════════════╗${NC}"
-    echo -e "${BOLD}${WHITE}║        🚀 T3RN NODE MANAGER            ║${NC}"
-    echo -e "${BOLD}${WHITE}╚════════════════════════════════════════╝${NC}\n"
-    
-    echo -e "${BOLD}${BLUE}🔧 Доступные действия:${NC}\n"
-    echo -e "${WHITE}[${CYAN}1${WHITE}] ${GREEN}➜ ${WHITE}🛠️  Установка ноды${NC}"
-    echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}▶️  Запуск ноды${NC}"
-    echo -e "${WHITE}[${CYAN}3${WHITE}] ${GREEN}➜ ${WHITE}⬆️  Обновление ноды${NC}"
-    echo -e "${WHITE}[${CYAN}4${WHITE}] ${GREEN}➜ ${WHITE}📋 Проверка логов${NC}"
-    echo -e "${WHITE}[${CYAN}5${WHITE}] ${GREEN}➜ ${WHITE}🔍 Статус ноды${NC}"
-    echo -e "${WHITE}[${CYAN}6${WHITE}] ${GREEN}➜ ${WHITE}🔌 Управление RPC${NC}"
-    echo -e "${WHITE}[${CYAN}7${WHITE}] ${GREEN}➜ ${WHITE}⏮️ Установка конкретной версии${NC}"
-    echo -e "${WHITE}[${CYAN}8${WHITE}] ${GREEN}➜ ${WHITE}🗑️  Удаление ноды${NC}"
-    echo -e "${WHITE}[${CYAN}9${WHITE}] ${GREEN}➜ ${WHITE}🚪 Выход${NC}\n"
+    echo -e "${BOLD}${ORANGE}╔══════════════════════════════════════════╗${NC}"
+    echo -e "${BOLD}${ORANGE}║             🌟 МЕНЮ T3RN 🌟              ║${NC}"
+    echo -e "${BOLD}${ORANGE}╚══════════════════════════════════════════╝${NC}"
+    echo -e "${BOLD}${WHITE}1.${NC} ${BLUE}Установка ноды${NC}"
+    echo -e "${BOLD}${WHITE}2.${NC} ${BLUE}Установка конкретной версии${NC}"
+    echo -e "${BOLD}${WHITE}3.${NC} ${BLUE}Проверка логов${NC}"
+    echo -e "${BOLD}${WHITE}4.${NC} ${BLUE}Управление RPC${NC}"
+    echo -e "${BOLD}${WHITE}5.${NC} ${BLUE}Управление газом${NC}"
+    echo -e "${BOLD}${WHITE}6.${NC} ${BLUE}Обновление ноды${NC}"
+    echo -e "${BOLD}${WHITE}7.${NC} ${BLUE}Удаление ноды${NC}"
+    echo -e "${BOLD}${WHITE}8.${NC} ${BLUE}Выход${NC}"
+    echo -e "${PURPLE}═════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}Введите номер опции:${NC}"
 }
 
 # Log file for debugging
-LOG_FILE="setup.log"
-exec > >(tee -a "$LOG_FILE") 2>&1
+LOG_FILE="$HOME/t3rn/setup.log"
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null
+# Отключаем глобальное перенаправление
+# exec > >(tee -a "$LOG_FILE") 2>&1
+
+# RPC эндпоинты по умолчанию - определяем глобально
+DEFAULT_RPC_ENDPOINTS_JSON='{
+  "l2rn": ["https://b2n.rpc.caldera.xyz/http"],
+  "arbt": ["https://arbitrum-sepolia.drpc.org"],
+  "bast": ["https://base-sepolia-rpc.publicnode.com"],
+  "blst": ["https://sepolia.blast.io"],
+  "opst": ["https://sepolia.optimism.io"],
+  "unit": ["https://unichain-sepolia.drpc.org"]
+}'
+
+# Извлечение эндпоинтов по умолчанию из JSON
+DEFAULT_RPC_ENDPOINTS_ARBT=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.arbt[0]')
+DEFAULT_RPC_ENDPOINTS_BSSP=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.bast[0]')
+DEFAULT_RPC_ENDPOINTS_BLSS=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.blst[0]')
+DEFAULT_RPC_ENDPOINTS_OPSP=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.opst[0]')
+DEFAULT_RPC_ENDPOINTS_UNIT=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.unit[0]')
+DEFAULT_RPC_ENDPOINTS_L2RN=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.l2rn[0]')
 
 echo -e "\n${BOLD}${WHITE}╔════════════════════════════════════════╗${NC}"
-    echo -e "${BOLD}${WHITE}║        🚀 T3RN NODE SETUP          ║${NC}"
-    echo -e "${BOLD}${WHITE}╚════════════════════════════════════════╝${NC}\n"
+echo -e "${BOLD}${WHITE}║           🚀 T3RN NODE SETUP           ║${NC}"
+echo -e "${BOLD}${WHITE}╚════════════════════════════════════════╝${NC}\n"
 sleep 2
 
 # Функция для отображения инструкций по использованию
@@ -262,7 +324,7 @@ MSG_CHECKING_EXECUTOR="🔍 === Проверка запущенных проце
 MSG_KILLING_EXECUTOR="⚙️ Обнаружен запущенный процесс executor. Останавливаем для предотвращения конфликтов..."
 MSG_EXECUTOR_KILLED="✅ Старый процесс executor успешно остановлен."
 MSG_NO_EXECUTOR_RUNNING="✅ Запущенных процессов executor не обнаружено - можно продолжать."
-MSG_WARNING="⚠️ ПРЕДУПРЕЖДЕНИЕ: ЕСЛИ ВЫ ДЕЛИТЕСЬ СКРИНШОТАМИ ЭТОГО СКРИПТА ИЗ-ЗА ОШИБКИ, УБЕДИТЕСЬ, ЧТО ВАШИ ПРИВАТНЫЕ КЛЮЧИ И КЛЮЧ ALCHEMY API НЕ ВИДНЫ! В ПРОТИВНОМ СЛУЧАЕ ВЫ МОЖЕТЕ ПОТЕРЯТЬ ВСЕ СВОИ АКТИВЫ В КОШЕЛЬКЕ ИЛИ РАСКРЫТЬ ДОСТУП К API! ⚠️"
+			MSG_WARNING="⚠️ ПРЕДУПРЕЖДЕНИЕ: ЕСЛИ ВЫ ДЕЛИТЕСЬ СКРИНШОТАМИ ЭТОГО СКРИПТА ИЗ-ЗА ОШИБКИ, УБЕДИТЕСЬ, ЧТО ВАШИ ПРИВАТНЫЕ КЛЮЧИ И КЛЮЧ ALCHEMY API НЕ ВИДНЫ! В ПРОТИВНОМ СЛУЧАЕ ВЫ МОЖЕТЕ ПОТЕРЯТЬ ВСЕ СВОИ АКТИВЫ В КОШЕЛЬКЕ ИЛИ РАСКРЫТЬ ДОСТУП К API! ⚠️"
 MSG_JQ_REQUIRED="📦 jq требуется для обработки JSON. Установка jq..."
 MSG_JQ_INSTALL_FAILED="❌ Не удалось установить jq. Пожалуйста, установите его вручную и попробуйте снова."
 MSG_JQ_INSTALL_SUCCESS="✅ jq успешно установлен."
@@ -276,617 +338,434 @@ MSG_CUSTOM_MODE_DESC="🛠️ Режим кастомного RPC: Исполь�
 MSG_SELECT_NODE_TYPE="🔢 Введите ваш выбор (1/2/3): "
 MSG_INVALID_NODE_TYPE="⚠️ Неверный выбор типа узла. Пожалуйста, введите 1, 2 или 3."
 
-# Step 0: Clean up previous installations
-echo -e "${GREEN}$MSG_CLEANUP${NC}"
-if $DRY_RUN; then
-    echo -e "${ORANGE}$MSG_DRY_RUN_DELETE${NC}"
-	sleep 1
-else
-    if [ -d "t3rn" ]; then
-        echo -e "${ORANGE}$MSG_DELETE_T3RN_DIR${NC}"
-        rm -rf t3rn
-    fi
-	
-	sleep 1
-
-    if [ -d "executor" ]; then
-        echo -e "${ORANGE}$MSG_DELETE_EXECUTOR_DIR${NC}"
-        rm -rf executor
-    fi
-	
-	sleep 1
-	
-    if ls executor-linux-*.tar.gz 1> /dev/null 2>&1; then
-        echo -e "${ORANGE}$MSG_DELETE_TAR_GZ${NC}"
-        rm -f executor-linux-*.tar.gz
-    fi
-	
-	sleep 1
-fi
-
-# Step 1: Create and navigate to t3rn directory
-echo -e "${ORANGE}$MSG_CREATE_DIR${NC}"
-if $DRY_RUN; then
-    echo -e "${GREEN}$MSG_DRY_RUN_CREATE_DIR${NC}"
-else
-    mkdir -p t3rn
-    cd t3rn || { echo -e "${RED}$MSG_FAILED_CREATE_DIR${NC}"; exit 1; }
-fi
-
-# Step 2.5: Version selection
-echo -e "${GREEN}${MSG_VERSION_CHOICE}${NC}"
-echo -e " ${ORANGE}${MSG_LATEST_OPTION}${NC}"
-echo -e " ${ORANGE}${MSG_SPECIFIC_OPTION}${NC}"
-
-while true; do
-    read -p "$(echo -e "${GREEN}${MSG_SELECT_NODE_TYPE}${NC}")" VERSION_CHOICE
+# Функция для управления RPC
+manage_rpc() {
+    local return_to_main=false
     
-    case $VERSION_CHOICE in
-        1)
-            LATEST_TAG=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
-            [ -z "$LATEST_TAG" ] && { echo -e "${RED}$MSG_FAILED_FETCH_TAG${NC}"; exit 1; }
-            break
-            ;;
-        2)
-            while true; do
-                echo -e "${GREEN}${MSG_ENTER_VERSION}${NC}"
-                read LATEST_TAG
-                [[ "$LATEST_TAG" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] && break
-                echo -e "${RED}${MSG_INVALID_VERSION_FORMAT}${NC}"
+    while [ "$return_to_main" = false ]; do
+        clear
+        echo -e "\n${BOLD}${BLUE}🔌 Управление RPC для ноды T3RN...${NC}\n"
+        
+        # Проверка наличия установленной ноды
+        if [ ! -f "$HOME/t3rn/executor/executor/bin/executor" ]; then
+            error_message "Нода не установлена. Сначала выполните установку."
+            return 1
+        fi
+        
+        # Подменю для работы с RPC
+        echo -e "${BOLD}${BLUE}Выберите действие:${NC}\n"
+        echo -e "${WHITE}[${CYAN}1${WHITE}] ${GREEN}➜ ${WHITE}📊 Просмотр текущих RPC endpoints${NC}"
+        echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}✏️ Изменение одного RPC endpoint${NC}"
+        echo -e "${WHITE}[${CYAN}3${WHITE}] ${GREEN}➜ ${WHITE}📝 Изменение всех RPC endpoints${NC}"
+        echo -e "${WHITE}[${CYAN}4${WHITE}] ${GREEN}➜ ${WHITE}🔄 Сбросить RPC на значения по умолчанию${NC}"
+        echo -e "${WHITE}[${CYAN}5${WHITE}] ${GREEN}➜ ${WHITE}🔙 Вернуться в главное меню${NC}\n"
+        
+        read -p "$(echo -e "${GREEN}Введите номер действия [1-5]:${NC} ")" rpc_choice
+        
+        # Переменная для хранения RPC конфигурации
+        RPC_CONFIG_FILE="$HOME/t3rn/rpc_config.json"
+        
+        # Функция для отображения RPC в формате таблицы
+        display_rpc_table() {
+            local rpc_json="$1"
+            
+            # Определяем сети и их описания
+            local networks=("l2rn" "arbt" "bast" "blst" "opst" "unit")
+            local network_names=("L2RN" "Arbitrum Sepolia" "Base Sepolia" "Blast Sepolia" "Optimism Sepolia" "Unichain Sepolia")
+            
+            # Устанавливаем фиксированную ширину колонок
+            local col1_width=15  # Код сети
+            local col2_width=25  # Название сети
+            local col3_width=70  # RPC Endpoint
+            
+            # Выводим заголовок
+            echo -e "\n${CYAN}📊 Текущие RPC endpoints:${NC}"
+            
+            # Верхняя граница таблицы
+            echo -e "${BOLD}${BLUE}┌───────────────┬─────────────────────────┬──────────────────────────────────────────────────────────────────┐${NC}"
+            
+            # Заголовки колонок
+            echo -e "${BOLD}${BLUE}│${WHITE} Код сети      ${BLUE}│${WHITE} Название сети           ${BLUE}│${WHITE} RPC Endpoint                                                   ${BLUE}│${NC}"
+            
+            # Разделитель после заголовков
+            echo -e "${BOLD}${BLUE}├───────────────┼─────────────────────────┼──────────────────────────────────────────────────────────────────┤${NC}"
+            
+            # Вывод строк с данными
+            for i in "${!networks[@]}"; do
+                local network="${networks[$i]}"
+                local network_name="${network_names[$i]}"
+                
+                # Получаем текущий RPC для отображения
+                local current_rpc=$(echo "$rpc_json" | jq -r ".$network // [] | join(\", \")")
+                
+                # Если RPC слишком длинный, обрезаем его для отображения
+                local display_rpc="$current_rpc"
+                if [ ${#display_rpc} -gt $((col3_width-5)) ]; then
+                    display_rpc="${display_rpc:0:$((col3_width-8))}..."
+                fi
+                
+                # Форматируем вывод строки данных
+                echo -e "${BOLD}${BLUE}│${CYAN} $(printf "%-13s" "$network")${BLUE}│${WHITE} $(printf "%-23s" "$network_name")${BLUE}│${YELLOW} $(printf "%-68s" "$display_rpc")${BLUE}│${NC}"
             done
+            
+            # Выводим нижнюю границу таблицы
+            echo -e "${BOLD}${BLUE}└───────────────┴─────────────────────────┴──────────────────────────────────────────────────────────────────┘${NC}"
+        }
+        
+        case $rpc_choice in
+            1)
+                echo -e "\n${BOLD}${BLUE}📊 Текущие RPC endpoints:${NC}"
+                
+                # Если файл конфигурации существует, показываем его содержимое
+                if [ -f "$RPC_CONFIG_FILE" ]; then
+                    local RPC_ENDPOINTS_JSON=$(cat "$RPC_CONFIG_FILE")
+                    display_rpc_table "$RPC_ENDPOINTS_JSON"
+                else
+                    echo -e "${YELLOW}⚠️ Конфигурационный файл RPC не найден. Отображаем стандартные эндпоинты:${NC}"
+                    display_rpc_table "$DEFAULT_RPC_ENDPOINTS_JSON"
+                fi
+                
+                # Ожидаем нажатия Enter перед возвратом в меню RPC
+                echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню RPC...${NC}"
+                read -s
+                ;;
+            2)
+                echo -e "\n${BOLD}${BLUE}✏️ Изменение одного RPC endpoint${NC}\n"
+                
+                # Загружаем текущие настройки или используем дефолтные
+                if [ -f "$RPC_CONFIG_FILE" ]; then
+                    RPC_ENDPOINTS_JSON=$(cat "$RPC_CONFIG_FILE")
+                else
+                    RPC_ENDPOINTS_JSON="$DEFAULT_RPC_ENDPOINTS_JSON"
+                fi
+                
+                # Отображаем текущую конфигурацию
+                display_rpc_table "$RPC_ENDPOINTS_JSON"
+                
+                # Запрашиваем у пользователя, какую сеть изменить
+                echo -e "\n${CYAN}Введите код сети для изменения RPC (l2rn, arbt, bast, blst, opst, unit):${NC}"
+                read -p "➜ " network_code
+                
+                # Проверяем, существует ли такая сеть
+                if ! echo "$RPC_ENDPOINTS_JSON" | jq -e ".$network_code" > /dev/null 2>&1; then
+                    error_message "Сеть с кодом '$network_code' не найдена"
+                    sleep 2
+                    continue
+                fi
+                
+                # Получаем информацию о выбранной сети и текущем RPC
+                current_rpc=$(echo "$RPC_ENDPOINTS_JSON" | jq -r ".$network_code | join(\", \")")
+                
+                # Получаем описание сети
+                network_descriptions=("L2RN" "Arbitrum Sepolia" "Base Sepolia" "Blast Sepolia" "Optimism Sepolia" "Unichain Sepolia")
+                network_codes=("l2rn" "arbt" "bast" "blst" "opst" "unit")
+                
+                network_desc=""
+                for i in "${!network_codes[@]}"; do
+                    if [ "${network_codes[$i]}" = "$network_code" ]; then
+                        network_desc="${network_descriptions[$i]}"
             break
-            ;;
-        *)
-            echo -e "${RED}${MSG_INVALID_VERSION_CHOICE}${NC}"
+                    fi
+                done
+                
+                # Отображаем текущие настройки для выбранной сети
+                echo -e "\n${CYAN}Текущий RPC для ${BOLD}${WHITE}$network_desc ($network_code)${NC}${CYAN}:${NC}\n${YELLOW}$current_rpc${NC}"
+                
+                # Запрашиваем новое значение RPC
+                echo -e "\n${GREEN}Введите новый RPC endpoint${NC} ${YELLOW}(или оставьте пустым для отмены)${NC}:"
+                read -p "➜ " new_rpc
+                
+                if [ -n "$new_rpc" ]; then
+                    # Обновляем JSON с новым RPC
+                    RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq --arg network "$network_code" --arg endpoint "$new_rpc" \
+                        '.[$network] = [$endpoint]')
+                    
+                    # Сохраняем обновленный JSON
+                    echo "$RPC_ENDPOINTS_JSON" > "$RPC_CONFIG_FILE"
+                    
+                    success_message "RPC для $network_desc ($network_code) обновлен на: $new_rpc"
+                    
+                    # Показываем обновленную таблицу
+                    echo -e "\n${CYAN}Обновленная конфигурация RPC:${NC}"
+                    display_rpc_table "$RPC_ENDPOINTS_JSON"
+                    
+                    # Спрашиваем о перезапуске ноды
+                    echo -e "\n${YELLOW}⚠️ Для применения изменений нужно перезапустить ноду.${NC}"
+                    echo -e "${GREEN}Хотите перезапустить ноду сейчас? (y/n)${NC}"
+                    read -p "➜ " restart_node
+                    
+                    if [[ "$restart_node" =~ ^[Yy]$ ]]; then
+                        kill_running_executor
+                        success_message "Нода остановлена. Подготовка к запуску с новыми RPC..."
+                        
+                        # Проверяем доступность порта 9090
+                        check_and_free_port
+                        if [ $? -ne 0 ]; then
+                            echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню RPC...${NC}"
+                            read -s
+                            continue
+                        fi
+                        
+                        # Экспортируем переменную окружения для executor
+                        export RPC_ENDPOINTS=$(echo "$RPC_ENDPOINTS_JSON" | jq -c .)
+                        
+                        # Запускаем ноду с новыми настройками
+                        cd "$HOME/t3rn/executor/executor/bin"
+                        ./executor > "$HOME/t3rn/node.log" 2>&1 &
+                        local NODE_PID=$!
+                        
+                        # Проверяем, запустилась ли нода успешно
+                        sleep 3
+                        if ps -p $NODE_PID > /dev/null; then
+                            success_message "Нода перезапущена с новыми RPC настройками (PID: $NODE_PID)"
+                        else
+                            error_message "Возникла ошибка при запуске ноды. Проверьте логи для дополнительной информации."
+                        fi
+                    fi
+                else
+                    info_message "Операция отменена, RPC не изменен"
+                fi
+                
+                # Ожидаем нажатия Enter перед возвратом в меню RPC
+                echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню RPC...${NC}"
+                read -s
+                ;;
+            3)
+                echo -e "\n${BOLD}${BLUE}📝 Изменение всех RPC endpoints${NC}\n"
+                
+                # Загружаем текущие настройки или используем дефолтные
+                if [ -f "$RPC_CONFIG_FILE" ]; then
+                    RPC_ENDPOINTS_JSON=$(cat "$RPC_CONFIG_FILE")
+                else
+                    RPC_ENDPOINTS_JSON="$DEFAULT_RPC_ENDPOINTS_JSON"
+                fi
+                
+                # Отображаем текущую конфигурацию
+                display_rpc_table "$RPC_ENDPOINTS_JSON"
+                
+                # Получаем информацию о доступных сетях
+                networks=(l2rn arbt bast blst opst unit)
+                network_names=("L2RN" "Arbitrum Sepolia" "Base Sepolia" "Blast Sepolia" "Optimism Sepolia" "Unichain Sepolia")
+                
+                # Обновляем RPC для каждой сети
+                for i in "${!networks[@]}"; do
+                    network="${networks[$i]}"
+                    network_name="${network_names[$i]}"
+                    
+                    # Получаем текущий RPC для отображения
+                    current_rpc=$(echo "$RPC_ENDPOINTS_JSON" | jq -r ".$network | join(\", \")")
+                    
+                    echo -e "\n${CYAN}Текущий RPC для ${BOLD}${WHITE}$network_name ($network)${NC}${CYAN}:${NC} ${YELLOW}$current_rpc${NC}"
+                    echo -e "${GREEN}Введите новый RPC${NC} ${YELLOW}(или оставьте пустым для сохранения текущего)${NC}:"
+                    read -p "➜ " new_endpoint
+                    
+                    if [ -n "$new_endpoint" ]; then
+                        # Обновляем JSON с новым RPC
+                        RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq --arg network "$network" --arg endpoint "$new_endpoint" \
+                            '.[$network] = [$endpoint]')
+                        success_message "RPC для $network_name обновлен"
+                    else
+                        info_message "RPC для $network_name оставлен без изменений"
+                    fi
+                done
+                
+                # Сохраняем обновленный JSON
+                echo "$RPC_ENDPOINTS_JSON" > "$RPC_CONFIG_FILE"
+                success_message "Конфигурация RPC сохранена"
+                
+                # Показываем обновленную таблицу
+                echo -e "\n${CYAN}Обновленная конфигурация RPC:${NC}"
+                display_rpc_table "$RPC_ENDPOINTS_JSON"
+                
+                # Спрашиваем о перезапуске ноды
+                echo -e "\n${YELLOW}⚠️ Для применения изменений нужно перезапустить ноду.${NC}"
+                echo -e "${GREEN}Хотите перезапустить ноду сейчас? (y/n)${NC}"
+                read -p "➜ " restart_node
+                
+                if [[ "$restart_node" =~ ^[Yy]$ ]]; then
+                    kill_running_executor
+                    success_message "Нода остановлена. Подготовка к запуску с новыми RPC..."
+                    
+                    # Проверяем доступность порта 9090
+                    check_and_free_port
+                    if [ $? -ne 0 ]; then
+                        echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню RPC...${NC}"
+                        read -s
+                        continue
+                    fi
+                    
+                    # Экспортируем переменную окружения для executor
+                    export RPC_ENDPOINTS=$(echo "$RPC_ENDPOINTS_JSON" | jq -c .)
+                    
+                    # Запускаем ноду с новыми настройками
+                    cd "$HOME/t3rn/executor/executor/bin"
+                    ./executor > "$HOME/t3rn/node.log" 2>&1 &
+                    local NODE_PID=$!
+                    
+                    # Проверяем, запустилась ли нода успешно
+                    sleep 3
+                    if ps -p $NODE_PID > /dev/null; then
+                        success_message "Нода перезапущена с новыми RPC настройками (PID: $NODE_PID)"
+                    else
+                        error_message "Возникла ошибка при запуске ноды. Проверьте логи для дополнительной информации."
+                    fi
+                fi
+                
+                # Ожидаем нажатия Enter перед возвратом в меню RPC
+                echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню RPC...${NC}"
+                read -s
+                ;;
+            4)
+                echo -e "\n${BOLD}${BLUE}🔄 Сброс RPC на значения по умолчанию${NC}\n"
+                
+                # Показываем текущие настройки
+                if [ -f "$RPC_CONFIG_FILE" ]; then
+                    echo -e "${CYAN}Текущие настройки RPC:${NC}"
+                    display_rpc_table "$(cat "$RPC_CONFIG_FILE")"
+                fi
+                
+                echo -e "\n${CYAN}Настройки RPC по умолчанию:${NC}"
+                display_rpc_table "$DEFAULT_RPC_ENDPOINTS_JSON"
+                
+                echo -e "\n${YELLOW}⚠️ Вы уверены, что хотите сбросить все RPC настройки на значения по умолчанию? (y/n)${NC}"
+                read -p "➜ " confirm_reset
+                
+                if [[ "$confirm_reset" =~ ^[Yy]$ ]]; then
+                    echo "$DEFAULT_RPC_ENDPOINTS_JSON" > "$RPC_CONFIG_FILE"
+                    success_message "RPC настройки сброшены на значения по умолчанию"
+                    
+                    # Спрашиваем о перезапуске ноды
+                    echo -e "${YELLOW}⚠️ Для применения изменений нужно перезапустить ноду.${NC}"
+                    echo -e "${GREEN}Хотите перезапустить ноду сейчас? (y/n)${NC}"
+                    read -p "➜ " restart_node
+                    
+                    if [[ "$restart_node" =~ ^[Yy]$ ]]; then
+                        kill_running_executor
+                        success_message "Нода остановлена. Подготовка к запуску с дефолтными RPC..."
+                        
+                        # Проверяем доступность порта 9090
+                        check_and_free_port
+                        if [ $? -ne 0 ]; then
+                            echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню RPC...${NC}"
+                            read -s
+                            continue
+                        fi
+                        
+                        # Экспортируем переменную окружения для executor
+                        export RPC_ENDPOINTS=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -c .)
+                        
+                        # Запускаем ноду с новыми настройками
+                        cd "$HOME/t3rn/executor/executor/bin"
+                        ./executor > "$HOME/t3rn/node.log" 2>&1 &
+                        local NODE_PID=$!
+                        
+                        # Проверяем, запустилась ли нода успешно
+                        sleep 3
+                        if ps -p $NODE_PID > /dev/null; then
+                            success_message "Нода перезапущена с дефолтными RPC настройками (PID: $NODE_PID)"
+                        else
+                            error_message "Возникла ошибка при запуске ноды. Проверьте логи для дополнительной информации."
+                        fi
+                    fi
+                else
+                    info_message "Сброс настроек отменен"
+                fi
+                
+                # Ожидаем нажатия Enter перед возвратом в меню RPC
+                echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню RPC...${NC}"
+                read -s
+                ;;
+            5)
+                info_message "Возвращаемся в главное меню"
+                return_to_main=true
+                ;;
+            *)
+                error_message "Неверный выбор. Пожалуйста, введите номер от 1 до 5."
+                sleep 2
             ;;
     esac
 done
 
-# Step 2: Download the latest release
-DOWNLOAD_URL="https://github.com/t3rn/executor-release/releases/download/$LATEST_TAG/executor-linux-$LATEST_TAG.tar.gz"
-echo -e "${GREEN}$MSG_DOWNLOAD${NC}"
-wget --progress=bar:force:noscroll "$DOWNLOAD_URL" -O "executor-linux-$LATEST_TAG.tar.gz"
-if [ $? -ne 0 ]; then
-    echo "${RED}$MSG_FAILED_DOWNLOAD${NC}"
-	sleep 2
-    exit 1
-fi
-echo -e "${GREEN}$MSG_DOWNLOAD_COMPLETE${NC}"
-sleep 1
-
-# Step 3: Extract the archive
-echo -e "${ORANGE}$MSG_EXTRACT${NC}"
-# extract_archive "executor-linux-$LATEST_TAG.tar.gz"
-tar -xvzf "executor-linux-$LATEST_TAG.tar.gz"
-if [ $? -ne 0 ]; then
-    echo -e "${RED}$MSG_FAILED_EXTRACT${NC}"
-	sleep 2
-    exit 1
-fi
-
-echo -e "${GREEN}$MSG_EXTRACTION_COMPLETE${NC}"
-sleep 1
-
-# Step 4: Navigate to the executor binary location
-echo -e "${ORANGE}$MSG_NAVIGATE_BINARY${NC}"
-if $DRY_RUN; then
-    echo -e "${GREEN}$MSG_DRY_RUN_NAVIGATE${NC}"
-	sleep 1
-else
-    mkdir -p executor/executor/bin
-    cd executor/executor/bin || { echo -e "${RED}$MSG_FAILED_NAVIGATE${NC}"; exit 1; }
-	sleep 1
-fi
-
-# Ask if the user wants to run an API node or RPC node
-echo -e "${GREEN}$MSG_NODE_TYPE_OPTIONS${NC}"
-echo -e " ${ORANGE}${MSG_API_MODE}${NC}"
-echo -e " ${ORANGE}${MSG_ALCHEMY_MODE}${NC}"
-echo -e " ${ORANGE}${MSG_CUSTOM_MODE}${NC}"
-
-while true; do
-    read -p "$(echo -e "${GREEN}${MSG_SELECT_NODE_TYPE}${NC}")" NODE_TYPE_CHOICE
-    
-    case $NODE_TYPE_CHOICE in
-        1)
-            NODE_TYPE="api"
-            echo -e "${GREEN}${MSG_API_MODE_DESC}${NC}"
-            export EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=true
-            export EXECUTOR_PROCESS_ORDERS_API_ENABLED=true
-            break
-            ;;
-        2)
-            NODE_TYPE="alchemy-rpc"
-            echo -e "${GREEN}${MSG_ALCHEMY_MODE_DESC}${NC}"
-            export EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=false
-            export EXECUTOR_PROCESS_ORDERS_API_ENABLED=false
-            break
-            ;;
-        3)
-            NODE_TYPE="custom-rpc"
-            echo -e "${GREEN}${MSG_CUSTOM_MODE_DESC}${NC}"
-            export EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=false
-            export EXECUTOR_PROCESS_ORDERS_API_ENABLED=false
-            break
-            ;;
-        *)
-            echo -e "${RED}${MSG_INVALID_NODE_TYPE}${NC}"
-            ;;
-    esac
-done
-
-# Ask for wallet private key (masked input)
-echo -e "${GREEN}$MSG_PRIVATE_KEY${NC}"
-WALLET_PRIVATE_KEY=$(ask_for_input "")
-
-# Ask for Alchemy API key (masked input, if RPC node is selected)
-if [[ "$NODE_TYPE" == "alchemy-rpc" ]]; then
-    echo -e "${GREEN}$MSG_ALCHEMY_API_KEY${NC}"
-    ALCHEMY_API_KEY=$(ask_for_input "")
-elif [[ "$NODE_TYPE" == "custom-rpc" ]]; then
-    echo -e "${ORANGE}${MSG_CUSTOM_RPC_WARNING}${NC}"
-    sleep 2
-fi
-
-# Ask for gas value and validate it
-while true; do
-	echo -e "${GREEN}$MSG_GAS_VALUE${NC} "
-    read GAS_VALUE
-    if [[ "$GAS_VALUE" =~ ^[0-9]+$ ]] && (( GAS_VALUE >= 100 && GAS_VALUE <= 20000 )); then
-        break
-    else
-        echo -e "${RED}$MSG_INVALID_GAS${NC}"
-    fi
-done
-
-#Конфигурация RPC эндпоинтов
-configure_rpc_endpoints() {
-    case $NODE_TYPE in
-        "alchemy-rpc")
-            echo -e "${GREEN}⚙️ Добавление Alchemy endpoints...${NC}"
-            RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq \
-                --arg arbt "https://arb-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-                --arg bast "https://base-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-                --arg opst "https://opt-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-                --arg blst "https://blast-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-                '.arbt += [$arbt] | .bast += [$bast] | .opst += [$opst] | .blst += [$blst]')
-            ;;
-
-        "custom-rpc")
-            echo -e "${GREEN}⚙️ Использование только пользовательских RPC endpoints...${NC}"
-            RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq 'del(.arbt, .bast, .opst, .blst)')
-            ;;
-    esac
+    return 0
 }
 
-# Выполнение конфигурации
-configure_rpc_endpoints
-
-# Установка окружения узла
-export ENVIRONMENT=testnet
-
-# Настройки логирования
-export LOG_LEVEL=debug
-export LOG_PRETTY=false
-
-# Обработка ставок, заказов и требований
-export EXECUTOR_PROCESS_BIDS_ENABLED=true
-export EXECUTOR_PROCESS_ORDERS_ENABLED=true
-export EXECUTOR_PROCESS_CLAIMS_ENABLED=true
-
-# Настройка параметров API в зависимости от типа узла
-if [[ "$NODE_TYPE" == "api" ]]; then
-    # Автоматическое включение настроек API для API узлов
-    export EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=true
-    export EXECUTOR_PROCESS_ORDERS_API_ENABLED=true
-else
-    # Автоматическое отключение настроек API для RPC узлов
-    export EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=false
-    export EXECUTOR_PROCESS_ORDERS_API_ENABLED=false
-fi
-
-# RPC эндпоинты по умолчанию
-DEFAULT_RPC_ENDPOINTS_JSON='{
-  "l2rn": ["https://b2n.rpc.caldera.xyz/http"],
-  "arbt": ["https://arbitrum-sepolia.drpc.org"],
-  "bast": ["https://base-sepolia-rpc.publicnode.com"],
-  "blst": ["https://sepolia.blast.io"],
-  "opst": ["https://sepolia.optimism.io"],
-  "unit": ["https://unichain-sepolia.drpc.org"]
-}'
-
-# Инициализация RPC_ENDPOINTS_JSON значениями по умолчанию
-RPC_ENDPOINTS_JSON="$DEFAULT_RPC_ENDPOINTS_JSON"
-
-# Извлечение эндпоинтов по умолчанию из JSON
-DEFAULT_RPC_ENDPOINTS_ARBT=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.arbt[0]')
-DEFAULT_RPC_ENDPOINTS_BSSP=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.bast[0]')
-DEFAULT_RPC_ENDPOINTS_BLSS=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.blst[0]')
-DEFAULT_RPC_ENDPOINTS_OPSP=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.opst[0]')
-DEFAULT_RPC_ENDPOINTS_UNIT=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.unit[0]')
-DEFAULT_RPC_ENDPOINTS_L2RN=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -r '.l2rn[0]')
-
-
-# Спрашиваем, хочет ли пользователь добавить пользовательские RPC эндпоинты или использовать стандартные
-echo -e "${GREEN}$MSG_RPC_ENDPOINTS: ${NC}" 
-read CUSTOM_RPC
-
-if [[ "$CUSTOM_RPC" =~ ^[Yy]$ ]]; then
-    echo -e "${ORANGE}$MSG_ENTER_CUSTOM_RPC${NC}"
+# Функция для установки конкретной версии ноды
+install_specific_version() {
+    echo -e "\n${BOLD}${BLUE}⏮️ Установка конкретной версии ноды T3RN...${NC}\n"
     
-    # Определение сетей и их описаний
-    declare -A rpc_map=(
-        ["arbt"]="Arbitrum Sepolia"
-        ["bast"]="Base Sepolia"
-        ["blst"]="Blast Sepolia"
-        ["opst"]="Optimism Sepolia"
-        ["unit"]="Unichain Sepolia"
-        ["l2rn"]="L2RN"
-    )
-
-    # Формирование JSON с RPC эндпоинтами
-    RPC_ENDPOINTS_JSON="{"
-    for network in "${!rpc_map[@]}"; do
-        echo -e "${GREEN}🔌 Введите RPC-точки для ${rpc_map[$network]} (через запятую):${NC}"
-        read -p "> " endpoints
-        if [ -n "$endpoints" ]; then
-            RPC_ENDPOINTS_JSON+="\"$network\": $(parse_rpc_input "$endpoints"),"
-        else
-            default_value=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -c ".$network")
-            RPC_ENDPOINTS_JSON+="\"$network\": $default_value,"
-        fi
-    done
-    RPC_ENDPOINTS_JSON="${RPC_ENDPOINTS_JSON%,}}"
-else
-    RPC_ENDPOINTS_JSON="$DEFAULT_RPC_ENDPOINTS_JSON"
-fi
-
-# Проверка структуры JSON
-if ! jq empty <<< "$RPC_ENDPOINTS_JSON"; then
-    echo -e "${RED}❌ Неверный JSON. Используем значения по умолчанию.${NC}"
-    RPC_ENDPOINTS_JSON="$DEFAULT_RPC_ENDPOINTS_JSON"
-fi
-
-# Минификация JSON
-export RPC_ENDPOINTS=$(echo "$RPC_ENDPOINTS_JSON" | jq -c .)
-
-# Формирование финального RPC_ENDPOINTS_L1RN и добавление его
-SELECTED_URLS=()
-for i in "${VALID_INDICES[@]}"; do
-    SELECTED_URLS+=("${L1RN_RPC_OPTIONS[$i]}")
-done
-
-# Присвоение значений по умолчанию или пользовательского выбора
-if [ ${#SELECTED_URLS[@]} -eq 0 ]; then
-    RPC_ENDPOINTS_L1RN="https://brn.calderarpc.com/http,https://brn.rpc.caldera.xyz/"
-else
-    RPC_ENDPOINTS_L1RN=$(IFS=,; echo "${SELECTED_URLS[*]}")
-fi
-
-# Настройка RPC эндпоинтов в зависимости от типа узла
-if [[ "$NODE_TYPE" == "rpc" ]]; then
-  echo -e "${GREEN}🔄 Добавление Alchemy RPC endpoints...${NC}"
-  
-  # Безопасное объединение Alchemy эндпоинтов с существующими
-  if ! RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq \
-    --arg arbt "https://arb-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-    --arg bast "https://base-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-    --arg opst "https://opt-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-    --arg blst "https://blast-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-    --arg unit "https://unichain-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-    '.arbt = (.arbt + [$arbt]) |
-     .bast = (.bast + [$bast]) |
-     .opst = (.opst + [$opst]) |
-     .blst = (.blst + [$blst]) |
-     .unit = (.unit + [$unit])' ); then
-    echo -e "${RED}❌ Не удалось добавить Alchemy endpoints. Неверная структура JSON.${NC}"
-    exit 1
-fi
-
-  # Проверка финального JSON
-  if ! echo "$RPC_ENDPOINTS_JSON" | jq empty; then
-    echo -e "${RED}❌ Неверная структура JSON после изменений:${NC}"
-    echo "$RPC_ENDPOINTS_JSON"
-    exit 1
-  fi
-fi
-
-# Минификация JSON с проверкой
-if ! RPC_ENDPOINTS=$(echo "$RPC_ENDPOINTS_JSON" | jq -c .); then
-  echo -e "${RED}❌ Не удалось минифицировать JSON структуру RPC endpoints:${NC}"
-  echo "$RPC_ENDPOINTS_JSON"
-  exit 1
-fi
-export RPC_ENDPOINTS
-
-# Настройка приватного ключа
-export PRIVATE_KEY_LOCAL=$WALLET_PRIVATE_KEY
-RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq -c .)
-export RPC_ENDPOINTS="$RPC_ENDPOINTS_JSON"
-
-# Выбор сетей для активации
-echo -e "${GREEN}$MSG_AVAILABLE_NETWORKS${NC}"
-echo -e "${ORANGE}$MSG_ARBT_DESC${NC}"
-echo -e "${ORANGE}$MSG_BSSP_DESC${NC}"
-echo -e "${ORANGE}$MSG_BLSS_DESC${NC}"
-echo -e "${ORANGE}$MSG_OPSP_DESC${NC}"
-echo -e "${ORANGE}🔷 UNIT = unichain-sepolia${NC}"
-echo -e "${RED}$MSG_L2RN_ALWAYS_ENABLED${NC}"
-
-ENABLED_NETWORKS="l2rn"  # l2rn is now always enabled as base layer
-while true; do
-    read -p "$(echo -e "${GREEN}🌐 Введите сети для активации (через запятую):\n[ARBT, BAST, BLST, OPST, UNIT] или 'all' для всех:${NC} ")" USER_NETWORKS
-    if [[ -z "$USER_NETWORKS" || "$USER_NETWORKS" =~ ^[Aa][Ll][Ll]$ ]]; then
-        ENABLED_NETWORKS="$ENABLED_NETWORKS,arbitrum-sepolia,base-sepolia,blast-sepolia,optimism-sepolia,unichain-sepolia"
-        break
-    else
-        IFS=',' read -r -a networks <<< "$USER_NETWORKS"
-        valid=true
-        for network in "${networks[@]}"; do
-            case "$network" in
-                ARBT)
-                    ENABLED_NETWORKS="$ENABLED_NETWORKS,arbitrum-sepolia"
-                    ;;
-                BAST)
-                    ENABLED_NETWORKS="$ENABLED_NETWORKS,base-sepolia"
-                    ;;
-                BLST)
-                    ENABLED_NETWORKS="$ENABLED_NETWORKS,blast-sepolia"
-                    ;;
-                OPST)
-                    ENABLED_NETWORKS="$ENABLED_NETWORKS,optimism-sepolia"
-                    ;;
-                UNIT)
-                    ENABLED_NETWORKS="$ENABLED_NETWORKS,unichain-sepolia"
-                    ;;
-                *)
-                    echo -e "${RED}⚠️ Неверная сеть: $network. Допустимые варианты: ARBT, BAST, BLST, OPST, UNIT${NC}"
-                    valid=false
-                    break
-                    ;;
-            esac
-        done
-        $valid && break
-    fi
-done
-export ENABLED_NETWORKS
-
-# Export RPC endpoints
-export RPC_ENDPOINTS_ARBT
-export RPC_ENDPOINTS_BSSP
-export RPC_ENDPOINTS_BLSS
-export RPC_ENDPOINTS_OPSP
-export RPC_ENDPOINTS_L1RN
-export EXECUTOR_MAX_L3_GAS_PRICE=$GAS_VALUE
-
-# Display the collected inputs and settings (for verification)
-echo -e "${GREEN}$MSG_COLLECTED_INPUTS${NC}"
-echo -e "${ORANGE}$MSG_NODE_TYPE_LABEL $NODE_TYPE${NC}"
-if [[ "$NODE_TYPE" == "rpc" ]]; then
-    # Mask the API key for display
-    MASKED_API_KEY="${ALCHEMY_API_KEY:0:6}******${ALCHEMY_API_KEY: -6}"
-    echo -e "${ORANGE}$MSG_ALCHEMY_API_KEY_LABEL${NC} ${BLUE}$MASKED_API_KEY${NC}"
-fi
-
-# Mask the private key for display
-MASKED_PRIVATE_KEY="${WALLET_PRIVATE_KEY:0:6}******${WALLET_PRIVATE_KEY: -6}"
-echo -e "${ORANGE}$MSG_WALLET_PRIVATE_KEY_LABEL${NC} ${BLUE}$MASKED_PRIVATE_KEY${NC}"
-echo -e "${ORANGE}$MSG_GAS_VALUE_LABEL${NC} ${BLUE}$GAS_VALUE${NC}"
-echo -e "${ORANGE}📡 EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API:${NC} ${BLUE}$EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API${NC}"
-echo -e "${ORANGE}📡 EXECUTOR_PROCESS_ORDERS_API_ENABLED:${NC} ${BLUE}$EXECUTOR_PROCESS_ORDERS_API_ENABLED${NC}"
-echo -e "${ORANGE}🌐 NODE_ENV:${NC} ${BLUE}$NODE_ENV${NC}"
-echo -e "${ORANGE}🔍 LOG_LEVEL:${NC} ${BLUE}$LOG_LEVEL${NC}"
-echo -e "${ORANGE}🎨 LOG_PRETTY:${NC} ${BLUE}$LOG_PRETTY${NC}"
-echo -e "${ORANGE}💼 EXECUTOR_PROCESS_BIDS_ENABLED:${NC} ${BLUE}$EXECUTOR_PROCESS_BIDS_ENABLED${NC}"
-echo -e "${ORANGE}📋 EXECUTOR_PROCESS_ORDERS_ENABLED:${NC} ${BLUE}$EXECUTOR_PROCESS_ORDERS_ENABLED${NC}"
-echo -e "${ORANGE}🧾 EXECUTOR_PROCESS_CLAIMS_ENABLED:${NC} ${BLUE}$EXECUTOR_PROCESS_CLAIMS_ENABLED${NC}"
-echo -e "${GREEN}$MSG_RPC_ENDPOINTS_LABEL${NC}"
-
-# Check which networks are enabled and display their RPC endpoints
-if [[ "$ENABLED_NETWORKS" == *"arbitrum-sepolia"* ]]; then
-    echo -e "${ORANGE}🔵 ARBT:${NC} ${BLUE}$RPC_ENDPOINTS_ARBT${NC}"
-fi
-if [[ "$ENABLED_NETWORKS" == *"base-sepolia"* ]]; then
-    echo -e "${ORANGE}🔵 BSSP:${NC} ${BLUE}$RPC_ENDPOINTS_BSSP${NC}"
-fi
-if [[ "$ENABLED_NETWORKS" == *"blast-sepolia"* ]]; then
-    echo -e "${ORANGE}🔵 BLSS:${NC} ${BLUE}$RPC_ENDPOINTS_BLSS${NC}"
-fi
-if [[ "$ENABLED_NETWORKS" == *"optimism-sepolia"* ]]; then
-    echo -e "${ORANGE}🔵 OPSP:${NC} ${BLUE}$RPC_ENDPOINTS_OPSP${NC}"
-fi
-if [[ "$ENABLED_NETWORKS" == *"l1rn"* ]]; then
-    echo -e "${ORANGE}🔵 L1RN:${NC} ${BLUE}$RPC_ENDPOINTS_L1RN${NC}"
-fi
-if [[ "$ENABLED_NETWORKS" == *"blast-sepolia"* ]]; then
-    echo -e "${ORANGE}🔵 BLST:${NC} ${BLUE}$RPC_ENDPOINTS_BLSS${NC}"
-fi
-if [[ "$ENABLED_NETWORKS" == *"unichain-sepolia"* ]]; then
-    echo -e "${ORANGE}🔵 UNIT:${NC} ${BLUE}$RPC_ENDPOINTS_UNIT${NC}"
-fi
-
-# Отображение предупреждения о безопасности
-echo -e "${RED}$MSG_WARNING${NC}"
-sleep 3
-
-# Шаг 5: Продолжение установки или других шагов настройки
-echo -e "${GREEN}$MSG_THANKS${NC}"
-sleep 3
-
-if $DRY_RUN; then
-    echo -e "${GREEN}$MSG_DRY_RUN_RUN_NODE${NC}"
-else
-    echo -e "\n${ORANGE}$MSG_CHECKING_EXECUTOR${NC}"
-    kill_running_executor
-    sleep 1
-
-    echo -e "${BLUE}$MSG_RUNNING_NODE${NC}"
-    ./executor
-fi
-
-# Функция для запуска работающей ноды
-start_node() {
-    echo -e "\n${BOLD}${BLUE}🚀 Запуск ноды T3RN...${NC}\n"
+    # Получаем список доступных версий с GitHub API
+    echo -e "${WHITE}[${CYAN}1/4${WHITE}] ${GREEN}➜ ${WHITE}🔍 Получение списка доступных версий...${NC}"
+    RELEASES=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases)
     
-    echo -e "${WHITE}[${CYAN}1/3${WHITE}] ${GREEN}➜ ${WHITE}🔍 Проверка установленной ноды...${NC}"
-    
-    # Проверка наличия файла executor
-    if [ ! -f "$HOME/t3rn/executor/executor/bin/executor" ]; then
-        error_message "Нода не установлена. Сначала выполните установку."
+    if [ -z "$RELEASES" ] || [ "$RELEASES" = "[]" ]; then
+        error_message "Не удалось получить список релизов. Проверьте подключение к интернету."
         return 1
     fi
-    success_message "Нода найдена"
     
-    echo -e "${WHITE}[${CYAN}2/3${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка работающих экземпляров...${NC}"
+    # Выводим список доступных версий (последние 10)
+    echo -e "\n${CYAN}Доступные версии ноды T3RN:${NC}\n"
+    
+    # Используем jq для извлечения имен тегов (версий) и дат релизов
+    TAGS=()
+    echo "$RELEASES" | jq -r '.[] | "\(.tag_name) - \(.published_at | fromdateiso8601 | strftime("%d-%m-%Y"))"' | head -10 | nl -w2 -s') '
+    
+    # Сохраняем теги в массив для последующего выбора
+    mapfile -t TAGS < <(echo "$RELEASES" | jq -r '.[].tag_name' | head -10)
+    
+    # Запрашиваем у пользователя выбор версии
+    echo -e "\n${GREEN}Введите номер версии для установки (1-${#TAGS[@]}):${NC}"
+    read -p "➜ " version_choice
+    
+    # Проверка корректности ввода
+    if ! [[ "$version_choice" =~ ^[0-9]+$ ]] || [ "$version_choice" -lt 1 ] || [ "$version_choice" -gt "${#TAGS[@]}" ]; then
+        error_message "Неверный выбор. Пожалуйста, введите номер от 1 до ${#TAGS[@]}."
+        return 1
+    fi
+    
+    # Выбранная версия
+    SELECTED_TAG="${TAGS[$version_choice-1]}"
+    success_message "Выбрана версия: $SELECTED_TAG"
+    
+    echo -e "${WHITE}[${CYAN}2/4${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка работающих экземпляров...${NC}"
     kill_running_executor
-    success_message "Подготовка к запуску завершена"
+    success_message "Подготовка к установке завершена"
     
-    echo -e "${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}▶️ Запуск ноды...${NC}"
-    cd "$HOME/t3rn/executor/executor/bin"
-    ./executor &
-    success_message "Нода запущена в фоновом режиме"
-    
-    echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}✨ Нода T3RN успешно запущена!${NC}"
-    echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
-}
-
-# Функция для обновления ноды
-update_node() {
-    echo -e "\n${BOLD}${BLUE}⬆️ Обновление ноды T3RN...${NC}\n"
-    
-    echo -e "${WHITE}[${CYAN}1/5${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка работающих экземпляров...${NC}"
-    kill_running_executor
-    success_message "Все экземпляры остановлены"
-    
-    echo -e "${WHITE}[${CYAN}2/5${WHITE}] ${GREEN}➜ ${WHITE}🧹 Очистка предыдущей установки...${NC}"
+    echo -e "${WHITE}[${CYAN}3/4${WHITE}] ${GREEN}➜ ${WHITE}🧹 Очистка предыдущей установки...${NC}"
     if [ -d "$HOME/t3rn" ]; then
-        rm -rf "$HOME/t3rn"
-        success_message "Предыдущая установка удалена"
-    else
-        info_message "Предыдущая установка не найдена"
-    fi
-    
-    echo -e "${WHITE}[${CYAN}3/5${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка последней версии...${NC}"
-    mkdir -p "$HOME/t3rn"
-    cd "$HOME/t3rn"
-    LATEST_TAG=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
-    if [ -z "$LATEST_TAG" ]; then
-        error_message "Не удалось получить последний тег релиза. Проверьте подключение к интернету."
-        return 1
-    fi
-    
-    DOWNLOAD_URL="https://github.com/t3rn/executor-release/releases/download/$LATEST_TAG/executor-linux-$LATEST_TAG.tar.gz"
-    wget --progress=bar:force:noscroll "$DOWNLOAD_URL" -O "executor-linux-$LATEST_TAG.tar.gz"
-    if [ $? -ne 0 ]; then
-        error_message "Не удалось загрузить последний релиз. Проверьте URL и попробуйте снова."
-        return 1
-    fi
-    success_message "Загрузка завершена"
-    
-    echo -e "${WHITE}[${CYAN}4/5${WHITE}] ${GREEN}➜ ${WHITE}📦 Распаковка архива...${NC}"
-    tar -xvzf "executor-linux-$LATEST_TAG.tar.gz"
-    if [ $? -ne 0 ]; then
-        error_message "Не удалось извлечь архив. Проверьте файл и попробуйте снова."
-        return 1
-    fi
-    success_message "Архив распакован"
-    
-    echo -e "${WHITE}[${CYAN}5/5${WHITE}] ${GREEN}➜ ${WHITE}✅ Завершение обновления...${NC}"
-    mkdir -p executor/executor/bin
-    cd executor/executor/bin
-    chmod +x executor
-    success_message "Исполняемый файл настроен"
-    
-    echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}✨ Нода T3RN успешно обновлена до версии $LATEST_TAG!${NC}"
-    echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
-}
-
-# Функция для проверки логов
-check_logs() {
-    echo -e "\n${BOLD}${BLUE}📋 Просмотр логов ноды T3RN...${NC}\n"
-    
-    LOG_FILE="$HOME/t3rn/setup.log"
-    if [ -f "$LOG_FILE" ]; then
-        echo -e "${CYAN}Последние 50 строк лога:${NC}\n"
-        tail -n 50 "$LOG_FILE"
-    else
-        error_message "Файл лога не найден"
-    fi
-    
-    echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}Для просмотра полного лога используйте:${NC}"
-    echo -e "${CYAN}cat $HOME/t3rn/setup.log${NC}"
-    echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
-}
-
-# Функция для проверки статуса ноды
-check_status() {
-    echo -e "\n${BOLD}${BLUE}🔍 Проверка статуса ноды T3RN...${NC}\n"
-    
-    # Проверка наличия запущенного процесса
-    PID=$(pgrep -f "./executor")
-    
-    if [ -n "$PID" ]; then
-        success_message "Нода активна (PID: $PID)"
-        echo -e "${CYAN}Время работы:${NC}"
-        ps -p $PID -o etime=
-    else
-        warning_message "Нода не запущена"
-    fi
-    
-    # Проверка наличия установленных файлов
-    if [ -f "$HOME/t3rn/executor/executor/bin/executor" ]; then
-        success_message "Нода установлена"
-    else
-        warning_message "Файлы ноды не найдены. Возможно, нода не установлена."
-    fi
-    
-    echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}Для запуска ноды используйте опцию 2 в главном меню${NC}"
-    echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
-}
-
-# Функция для удаления ноды
-remove_node() {
-    echo -e "\n${BOLD}${RED}⚠️ Удаление ноды T3RN...${NC}\n"
-    
-    echo -e "${RED}Вы уверены, что хотите удалить ноду T3RN? (y/n)${NC}"
-    read -p "➜ " confirm
-    
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        echo -e "${WHITE}[${CYAN}1/2${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка работающих экземпляров...${NC}"
-        kill_running_executor
-        success_message "Все экземпляры остановлены"
-        
-        echo -e "${WHITE}[${CYAN}2/2${WHITE}] ${GREEN}➜ ${WHITE}🗑️ Удаление файлов...${NC}"
-        if [ -d "$HOME/t3rn" ]; then
-            rm -rf "$HOME/t3rn"
-            success_message "Директория ноды удалена"
-        else
-            info_message "Директория ноды не найдена"
+        # Сохраняем файлы логов, если они существуют
+        if [ -f "$HOME/t3rn/setup.log" ]; then
+            cp "$HOME/t3rn/setup.log" "/tmp/t3rn_setup.log.backup"
+        fi
+        if [ -f "$HOME/t3rn/node.log" ]; then
+            cp "$HOME/t3rn/node.log" "/tmp/t3rn_node.log.backup"
+        fi
+        # Сохраняем конфигурационный файл газа, если он существует
+        if [ -f "$HOME/t3rn/gas_config.txt" ]; then
+            cp "$HOME/t3rn/gas_config.txt" "/tmp/t3rn_gas_config.backup"
+        fi
+        # Сохраняем конфигурационный файл RPC, если он существует
+        if [ -f "$HOME/t3rn/rpc_config.json" ]; then
+            cp "$HOME/t3rn/rpc_config.json" "/tmp/t3rn_rpc_config.backup"
         fi
         
-        if [ -d "$HOME/executor" ]; then
-            rm -rf "$HOME/executor"
-            success_message "Дополнительные файлы ноды удалены"
-        fi
-        
-        echo -e "\n${GREEN}✅ Нода T3RN успешно удалена!${NC}\n"
-    else
-        info_message "Удаление отменено"
-    fi
-}
-
-# Функция для установки полной ноды с параметрами
-setup_node() {
-    # Переносим оригинальную функциональность скрипта сюда
-    echo -e "\n${BOLD}${BLUE}🛠️ Установка ноды T3RN...${NC}\n"
-    
-    echo -e "${WHITE}[${CYAN}1/6${WHITE}] ${GREEN}➜ ${WHITE}🧹 Очистка предыдущих установок...${NC}"
-    if [ -d "$HOME/t3rn" ]; then
         rm -rf "$HOME/t3rn"
+        
+        # Создаем директорию заново и восстанавливаем логи и конфигурацию
+        mkdir -p "$HOME/t3rn"
+        if [ -f "/tmp/t3rn_setup.log.backup" ]; then
+            cp "/tmp/t3rn_setup.log.backup" "$HOME/t3rn/setup.log"
+        fi
+        if [ -f "/tmp/t3rn_node.log.backup" ]; then
+            cp "/tmp/t3rn_node.log.backup" "$HOME/t3rn/node.log"
+        fi
+        if [ -f "/tmp/t3rn_gas_config.backup" ]; then
+            cp "/tmp/t3rn_gas_config.backup" "$HOME/t3rn/gas_config.txt"
+        fi
+        if [ -f "/tmp/t3rn_rpc_config.backup" ]; then
+            cp "/tmp/t3rn_rpc_config.backup" "$HOME/t3rn/rpc_config.json"
+        fi
+    else
+        mkdir -p "$HOME/t3rn"
     fi
     
     if [ -d "$HOME/executor" ]; then
@@ -896,64 +775,76 @@ setup_node() {
     if ls executor-linux-*.tar.gz 1> /dev/null 2>&1; then
         rm -f executor-linux-*.tar.gz
     fi
-    success_message "Предыдущие установки очищены"
+    success_message "Предыдущая установка очищена"
     
-    echo -e "${WHITE}[${CYAN}2/6${WHITE}] ${GREEN}➜ ${WHITE}📁 Создание директории...${NC}"
-    mkdir -p "$HOME/t3rn"
-    cd "$HOME/t3rn" || { 
-        error_message "Не удалось создать или перейти в директорию t3rn"
+    echo -e "${WHITE}[${CYAN}4/4${WHITE}] ${GREEN}➜ ${WHITE}📥 Установка версии $SELECTED_TAG...${NC}"
+    
+    # Создаем директорию и загружаем выбранную версию
+    cd "$HOME/t3rn"
+    
+    DOWNLOAD_URL="https://github.com/t3rn/executor-release/releases/download/$SELECTED_TAG/executor-linux-$SELECTED_TAG.tar.gz"
+    wget --progress=bar:force:noscroll "$DOWNLOAD_URL" -O "executor-linux-$SELECTED_TAG.tar.gz"
+    
+if [ $? -ne 0 ]; then
+        error_message "Не удалось загрузить выбранную версию. Проверьте URL и попробуйте снова."
         return 1
-    }
-    success_message "Директория создана"
+    fi
     
-    echo -e "${WHITE}[${CYAN}3/6${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка последней версии...${NC}"
-    LATEST_TAG=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
-    if [ -z "$LATEST_TAG" ]; then
-        error_message "Не удалось получить последний тег релиза. Проверьте подключение к интернету."
-        return 1
-    }
-    
-    DOWNLOAD_URL="https://github.com/t3rn/executor-release/releases/download/$LATEST_TAG/executor-linux-$LATEST_TAG.tar.gz"
-    wget --progress=bar:force:noscroll "$DOWNLOAD_URL" -O "executor-linux-$LATEST_TAG.tar.gz"
-    if [ $? -ne 0 ]; then
-        error_message "Не удалось загрузить последний релиз. Проверьте URL и попробуйте снова."
-        return 1
-    }
-    success_message "Загрузка завершена"
-    
-    echo -e "${WHITE}[${CYAN}4/6${WHITE}] ${GREEN}➜ ${WHITE}📦 Распаковка архива...${NC}"
-    tar -xvzf "executor-linux-$LATEST_TAG.tar.gz"
-    if [ $? -ne 0 ]; then
+    # Распаковываем архив
+    tar -xvzf "executor-linux-$SELECTED_TAG.tar.gz"
+if [ $? -ne 0 ]; then
         error_message "Не удалось извлечь архив. Проверьте файл и попробуйте снова."
         return 1
     fi
-    success_message "Архив распакован"
     
-    echo -e "${WHITE}[${CYAN}5/6${WHITE}] ${GREEN}➜ ${WHITE}⚙️ Настройка ноды...${NC}"
+    # Подготавливаем исполняемый файл
     mkdir -p executor/executor/bin
     cd executor/executor/bin || {
-        error_message "Не удалось перейти к расположению бинарного файла executor"
+        error_message "Не удалось перейти к расположению бинарного файла executor."
         return 1
     }
     chmod +x executor
     
-    # Здесь вызываем оригинальную функцию для настройки ноды
+    # Настройка ноды
+    echo -e "\n${CYAN}Теперь нужно настроить ноду.${NC}"
     configure_node
-    success_message "Настройка завершена"
     
-    echo -e "${WHITE}[${CYAN}6/6${WHITE}] ${GREEN}➜ ${WHITE}▶️ Запуск ноды...${NC}"
-    ./executor &
-    success_message "Нода запущена в фоновом режиме"
+    # Запуск ноды (автоматически)
+    echo -e "\n${GREEN}🚀 Запуск ноды версии $SELECTED_TAG...${NC}"
+    
+    # Проверяем доступность порта 9090 перед запуском
+    check_and_free_port
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+    
+    # Создаем файл для логов ноды, если он не существует
+    NODE_LOG="$HOME/t3rn/node.log"
+    touch "$NODE_LOG"
+    
+    # Запуск ноды в фоновом режиме с перенаправлением вывода в лог-файл
+    ./executor > "$NODE_LOG" 2>&1 &
+    local NODE_PID=$!
+    
+    # Проверяем, запустилась ли нода успешно
+    sleep 3
+    if ps -p $NODE_PID > /dev/null; then
+        success_message "Нода версии $SELECTED_TAG запущена (PID: $NODE_PID)"
+        success_message "Логи работы ноды сохраняются в: $NODE_LOG"
+    else
+        error_message "Возникла ошибка при запуске ноды. Проверьте логи для дополнительной информации."
+        return 1
+    fi
     
     echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}✨ Нода T3RN успешно установлена и запущена!${NC}"
-    echo -e "${CYAN}Версия: ${LATEST_TAG}${NC}"
+    echo -e "${GREEN}✨ Нода T3RN версии $SELECTED_TAG успешно установлена и запущена!${NC}"
     echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
 }
 
 # Функция для настройки ноды (используется при установке)
 configure_node() {
-    # Используем существующий код для конфигурации ноды
+    # Локальная переменная для хранения пути к файлу конфигурации газа
+    local gas_config_file="$HOME/t3rn/gas_config.txt"
     
     # Выбор типа узла
     info_message "Выберите тип узла:"
@@ -1007,6 +898,8 @@ configure_node() {
     while true; do
         read -p "➜ " GAS_VALUE
         if [[ "$GAS_VALUE" =~ ^[0-9]+$ ]] && (( GAS_VALUE >= 100 && GAS_VALUE <= 20000 )); then
+            # Сохраняем значение газа в файл конфигурации для будущего использования
+            echo "$GAS_VALUE" > "$gas_config_file"
             success_message "Значение газа установлено: $GAS_VALUE"
             break
         else
@@ -1060,44 +953,28 @@ configure_node() {
                     ;;
                 *)
                     warning_message "Неверная сеть: $network. Пропускаем."
-                    ;;
-            esac
-        done
+            ;;
+    esac
+done
     fi
     export ENABLED_NETWORKS
     success_message "Настройка сетей завершена"
     
     # Настройка RPC эндпоинтов
-    # RPC эндпоинты по умолчанию
-    DEFAULT_RPC_ENDPOINTS_JSON='{
-      "l2rn": ["https://b2n.rpc.caldera.xyz/http"],
-      "arbt": ["https://arbitrum-sepolia.drpc.org"],
-      "bast": ["https://base-sepolia-rpc.publicnode.com"],
-      "blst": ["https://sepolia.blast.io"],
-      "opst": ["https://sepolia.optimism.io"],
-      "unit": ["https://unichain-sepolia.drpc.org"]
-    }'
-    
     # Инициализация RPC_ENDPOINTS_JSON значениями по умолчанию
     RPC_ENDPOINTS_JSON="$DEFAULT_RPC_ENDPOINTS_JSON"
     
     # Если выбран Alchemy RPC, добавляем Alchemy эндпоинты
-    if [[ "$NODE_TYPE" == "alchemy-rpc" ]]; then
+if [[ "$NODE_TYPE" == "alchemy-rpc" ]]; then
         info_message "Добавление Alchemy RPC endpoints..."
-        RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq \
-            --arg arbt "https://arb-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-            --arg bast "https://base-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-            --arg opst "https://opt-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-            --arg blst "https://blast-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-            --arg unit "https://unichain-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
-            '.arbt = (.arbt + [$arbt]) |
-             .bast = (.bast + [$bast]) |
-             .opst = (.opst + [$opst]) |
-             .blst = (.blst + [$blst]) |
-             .unit = (.unit + [$unit])')
+        configure_rpc_endpoints
     fi
     
-    # Минификация JSON
+    # Минификация JSON и сохранение в файл конфигурации
+    RPC_CONFIG_FILE="$HOME/t3rn/rpc_config.json"
+    echo "$RPC_ENDPOINTS_JSON" > "$RPC_CONFIG_FILE"
+    
+    # Экспортируем переменную окружения для executor
     export RPC_ENDPOINTS=$(echo "$RPC_ENDPOINTS_JSON" | jq -c .)
     success_message "Настройка RPC эндпоинтов завершена"
     
@@ -1108,390 +985,767 @@ configure_node() {
     echo -e "${ORANGE}🌐 Активные сети:${NC} ${BLUE}$ENABLED_NETWORKS${NC}"
 }
 
-# Функция для управления RPC
-manage_rpc() {
-    echo -e "\n${BOLD}${BLUE}🔌 Управление RPC для ноды T3RN...${NC}\n"
+# Функция для установки полной ноды с параметрами
+setup_node() {
+    # Переносим оригинальную функциональность скрипта сюда
+    echo -e "\n${BOLD}${BLUE}🛠️ Установка ноды T3RN...${NC}\n"
     
-    # Проверка наличия установленной ноды
-    if [ ! -f "$HOME/t3rn/executor/executor/bin/executor" ]; then
-        error_message "Нода не установлена. Сначала выполните установку."
-        return 1
-    fi
-    
-    # Подменю для работы с RPC
-    echo -e "${BOLD}${BLUE}Выберите действие:${NC}\n"
-    echo -e "${WHITE}[${CYAN}1${WHITE}] ${GREEN}➜ ${WHITE}📊 Просмотр текущих RPC endpoints${NC}"
-    echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}✏️ Изменение одного RPC endpoint${NC}"
-    echo -e "${WHITE}[${CYAN}3${WHITE}] ${GREEN}➜ ${WHITE}📝 Изменение всех RPC endpoints${NC}"
-    echo -e "${WHITE}[${CYAN}4${WHITE}] ${GREEN}➜ ${WHITE}🔄 Сбросить RPC на значения по умолчанию${NC}"
-    echo -e "${WHITE}[${CYAN}5${WHITE}] ${GREEN}➜ ${WHITE}🔙 Вернуться в главное меню${NC}\n"
-    
-    read -p "$(echo -e "${GREEN}Введите номер действия [1-5]:${NC} ")" rpc_choice
-    
-    # RPC эндпоинты по умолчанию (для сброса)
-    DEFAULT_RPC_ENDPOINTS_JSON='{
-      "l2rn": ["https://b2n.rpc.caldera.xyz/http"],
-      "arbt": ["https://arbitrum-sepolia.drpc.org"],
-      "bast": ["https://base-sepolia-rpc.publicnode.com"],
-      "blst": ["https://sepolia.blast.io"],
-      "opst": ["https://sepolia.optimism.io"],
-      "unit": ["https://unichain-sepolia.drpc.org"]
-    }'
-    
-    # Переменная для хранения RPC конфигурации
-    RPC_CONFIG_FILE="$HOME/t3rn/rpc_config.json"
-    
-    # Функция для отображения RPC в формате таблицы
-    display_rpc_table() {
-        local rpc_json="$1"
-        
-        # Вывод заголовка таблицы
-        echo -e "\n${BOLD}${BLUE}┌──────────────┬─────────────────────┬──────────────────────────────────────────────────────────┐${NC}"
-        echo -e "${BOLD}${BLUE}│ ${WHITE}Код сети     ${BLUE}│ ${WHITE}Название сети        ${BLUE}│ ${WHITE}RPC Endpoint                                           ${BLUE}│${NC}"
-        echo -e "${BOLD}${BLUE}├──────────────┼─────────────────────┼──────────────────────────────────────────────────────────┤${NC}"
-        
-        # Определение сетей и их описаний
-        local networks=("l2rn" "arbt" "bast" "blst" "opst" "unit")
-        local network_names=("L2RN" "Arbitrum Sepolia" "Base Sepolia" "Blast Sepolia" "Optimism Sepolia" "Unichain Sepolia")
-        
-        # Вывод данных по каждой сети
-        for i in "${!networks[@]}"; do
-            local network="${networks[$i]}"
-            local network_name="${network_names[$i]}"
-            
-            # Получаем текущий RPC для отображения
-            local current_rpc=$(echo "$rpc_json" | jq -r ".$network // [] | join(\", \")")
-            
-            # Если RPC слишком длинный, обрезаем его для отображения
-            local display_rpc="$current_rpc"
-            if [ ${#display_rpc} -gt 60 ]; then
-                display_rpc="${display_rpc:0:57}..."
-            fi
-            
-            # Форматируем сеть и имя сети для выравнивания
-            local net_code=$(printf "%-12s" "$network")
-            local net_name=$(printf "%-19s" "$network_name")
-            
-            # Вывод строки таблицы
-            echo -e "${BOLD}${BLUE}│ ${CYAN}$net_code ${BLUE}│ ${WHITE}$net_name ${BLUE}│ ${YELLOW}${display_rpc}${BLUE}$(printf "%$((60 - ${#display_rpc}))s")│${NC}"
-        done
-        
-        # Вывод нижней границы таблицы
-        echo -e "${BOLD}${BLUE}└──────────────┴─────────────────────┴──────────────────────────────────────────────────────────┘${NC}"
-    }
-    
-    case $rpc_choice in
-        1)
-            echo -e "\n${BOLD}${BLUE}📊 Текущие RPC endpoints:${NC}"
-            
-            # Если файл конфигурации существует, показываем его содержимое
-            if [ -f "$RPC_CONFIG_FILE" ]; then
-                local RPC_ENDPOINTS_JSON=$(cat "$RPC_CONFIG_FILE")
-                display_rpc_table "$RPC_ENDPOINTS_JSON"
-            else
-                echo -e "${YELLOW}⚠️ Конфигурационный файл RPC не найден. Отображаем стандартные эндпоинты:${NC}"
-                display_rpc_table "$DEFAULT_RPC_ENDPOINTS_JSON"
-            fi
-            ;;
-        2)
-            echo -e "\n${BOLD}${BLUE}✏️ Изменение одного RPC endpoint${NC}\n"
-            
-            # Загружаем текущие настройки или используем дефолтные
-            if [ -f "$RPC_CONFIG_FILE" ]; then
-                RPC_ENDPOINTS_JSON=$(cat "$RPC_CONFIG_FILE")
-            else
-                RPC_ENDPOINTS_JSON="$DEFAULT_RPC_ENDPOINTS_JSON"
-            fi
-            
-            # Отображаем текущую конфигурацию
-            display_rpc_table "$RPC_ENDPOINTS_JSON"
-            
-            # Запрашиваем у пользователя, какую сеть изменить
-            echo -e "\n${CYAN}Введите код сети для изменения RPC (l2rn, arbt, bast, blst, opst, unit):${NC}"
-            read -p "➜ " network_code
-            
-            # Проверяем, существует ли такая сеть
-            if ! echo "$RPC_ENDPOINTS_JSON" | jq -e ".$network_code" > /dev/null 2>&1; then
-                error_message "Сеть с кодом '$network_code' не найдена"
-                return 1
-            fi
-            
-            # Получаем информацию о выбранной сети и текущем RPC
-            current_rpc=$(echo "$RPC_ENDPOINTS_JSON" | jq -r ".$network_code | join(\", \")")
-            
-            # Получаем описание сети
-            network_descriptions=("L2RN" "Arbitrum Sepolia" "Base Sepolia" "Blast Sepolia" "Optimism Sepolia" "Unichain Sepolia")
-            network_codes=("l2rn" "arbt" "bast" "blst" "opst" "unit")
-            
-            network_desc=""
-            for i in "${!network_codes[@]}"; do
-                if [ "${network_codes[$i]}" = "$network_code" ]; then
-                    network_desc="${network_descriptions[$i]}"
-                    break
-                fi
-            done
-            
-            # Отображаем текущие настройки для выбранной сети
-            echo -e "\n${CYAN}Текущий RPC для ${BOLD}${WHITE}$network_desc ($network_code)${NC}${CYAN}:${NC}\n${YELLOW}$current_rpc${NC}"
-            
-            # Запрашиваем новое значение RPC
-            echo -e "\n${GREEN}Введите новый RPC endpoint${NC} ${YELLOW}(или оставьте пустым для отмены)${NC}:"
-            read -p "➜ " new_rpc
-            
-            if [ -n "$new_rpc" ]; then
-                # Обновляем JSON с новым RPC
-                RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq --arg network "$network_code" --arg endpoint "$new_rpc" \
-                    '.[$network] = [$endpoint]')
-                
-                # Сохраняем обновленный JSON
-                echo "$RPC_ENDPOINTS_JSON" > "$RPC_CONFIG_FILE"
-                
-                success_message "RPC для $network_desc ($network_code) обновлен на: $new_rpc"
-                
-                # Показываем обновленную таблицу
-                echo -e "\n${CYAN}Обновленная конфигурация RPC:${NC}"
-                display_rpc_table "$RPC_ENDPOINTS_JSON"
-                
-                # Спрашиваем о перезапуске ноды
-                echo -e "\n${YELLOW}⚠️ Для применения изменений нужно перезапустить ноду.${NC}"
-                echo -e "${GREEN}Хотите перезапустить ноду сейчас? (y/n)${NC}"
-                read -p "➜ " restart_node
-                
-                if [[ "$restart_node" =~ ^[Yy]$ ]]; then
-                    kill_running_executor
-                    success_message "Нода остановлена. Подготовка к запуску с новыми RPC..."
-                    
-                    # Экспортируем переменную окружения для executor
-                    export RPC_ENDPOINTS=$(echo "$RPC_ENDPOINTS_JSON" | jq -c .)
-                    
-                    # Запускаем ноду с новыми настройками
-                    cd "$HOME/t3rn/executor/executor/bin"
-                    ./executor &
-                    success_message "Нода перезапущена с новыми RPC настройками"
-                fi
-            else
-                info_message "Операция отменена, RPC не изменен"
-            fi
-            ;;
-        3)
-            echo -e "\n${BOLD}${BLUE}📝 Изменение всех RPC endpoints${NC}\n"
-            
-            # Загружаем текущие настройки или используем дефолтные
-            if [ -f "$RPC_CONFIG_FILE" ]; then
-                RPC_ENDPOINTS_JSON=$(cat "$RPC_CONFIG_FILE")
-            else
-                RPC_ENDPOINTS_JSON="$DEFAULT_RPC_ENDPOINTS_JSON"
-            fi
-            
-            # Отображаем текущую конфигурацию
-            display_rpc_table "$RPC_ENDPOINTS_JSON"
-            
-            # Получаем информацию о доступных сетях
-            networks=(l2rn arbt bast blst opst unit)
-            network_names=("L2RN" "Arbitrum Sepolia" "Base Sepolia" "Blast Sepolia" "Optimism Sepolia" "Unichain Sepolia")
-            
-            # Обновляем RPC для каждой сети
-            for i in "${!networks[@]}"; do
-                network="${networks[$i]}"
-                network_name="${network_names[$i]}"
-                
-                # Получаем текущий RPC для отображения
-                current_rpc=$(echo "$RPC_ENDPOINTS_JSON" | jq -r ".$network | join(\", \")")
-                
-                echo -e "\n${CYAN}Текущий RPC для ${BOLD}${WHITE}$network_name ($network)${NC}${CYAN}:${NC} ${YELLOW}$current_rpc${NC}"
-                echo -e "${GREEN}Введите новый RPC${NC} ${YELLOW}(или оставьте пустым для сохранения текущего)${NC}:"
-                read -p "➜ " new_endpoint
-                
-                if [ -n "$new_endpoint" ]; then
-                    # Обновляем JSON с новым RPC
-                    RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq --arg network "$network" --arg endpoint "$new_endpoint" \
-                        '.[$network] = [$endpoint]')
-                    success_message "RPC для $network_name обновлен"
-                else
-                    info_message "RPC для $network_name оставлен без изменений"
-                fi
-            done
-            
-            # Сохраняем обновленный JSON
-            echo "$RPC_ENDPOINTS_JSON" > "$RPC_CONFIG_FILE"
-            success_message "Конфигурация RPC сохранена"
-            
-            # Показываем обновленную таблицу
-            echo -e "\n${CYAN}Обновленная конфигурация RPC:${NC}"
-            display_rpc_table "$RPC_ENDPOINTS_JSON"
-            
-            # Спрашиваем о перезапуске ноды
-            echo -e "\n${YELLOW}⚠️ Для применения изменений нужно перезапустить ноду.${NC}"
-            echo -e "${GREEN}Хотите перезапустить ноду сейчас? (y/n)${NC}"
-            read -p "➜ " restart_node
-            
-            if [[ "$restart_node" =~ ^[Yy]$ ]]; then
-                kill_running_executor
-                success_message "Нода остановлена. Подготовка к запуску с новыми RPC..."
-                
-                # Экспортируем переменную окружения для executor
-                export RPC_ENDPOINTS=$(echo "$RPC_ENDPOINTS_JSON" | jq -c .)
-                
-                # Запускаем ноду с новыми настройками
-                cd "$HOME/t3rn/executor/executor/bin"
-                ./executor &
-                success_message "Нода перезапущена с новыми RPC настройками"
-            fi
-            ;;
-        4)
-            echo -e "\n${BOLD}${BLUE}🔄 Сброс RPC на значения по умолчанию${NC}\n"
-            
-            # Показываем текущие настройки
-            if [ -f "$RPC_CONFIG_FILE" ]; then
-                echo -e "${CYAN}Текущие настройки RPC:${NC}"
-                display_rpc_table "$(cat "$RPC_CONFIG_FILE")"
-            fi
-            
-            echo -e "\n${CYAN}Настройки RPC по умолчанию:${NC}"
-            display_rpc_table "$DEFAULT_RPC_ENDPOINTS_JSON"
-            
-            echo -e "\n${YELLOW}⚠️ Вы уверены, что хотите сбросить все RPC настройки на значения по умолчанию? (y/n)${NC}"
-            read -p "➜ " confirm_reset
-            
-            if [[ "$confirm_reset" =~ ^[Yy]$ ]]; then
-                echo "$DEFAULT_RPC_ENDPOINTS_JSON" > "$RPC_CONFIG_FILE"
-                success_message "RPC настройки сброшены на значения по умолчанию"
-                
-                # Спрашиваем о перезапуске ноды
-                echo -e "${YELLOW}⚠️ Для применения изменений нужно перезапустить ноду.${NC}"
-                echo -e "${GREEN}Хотите перезапустить ноду сейчас? (y/n)${NC}"
-                read -p "➜ " restart_node
-                
-                if [[ "$restart_node" =~ ^[Yy]$ ]]; then
-                    kill_running_executor
-                    success_message "Нода остановлена. Подготовка к запуску с дефолтными RPC..."
-                    
-                    # Экспортируем переменную окружения для executor
-                    export RPC_ENDPOINTS=$(echo "$DEFAULT_RPC_ENDPOINTS_JSON" | jq -c .)
-                    
-                    # Запускаем ноду с новыми настройками
-                    cd "$HOME/t3rn/executor/executor/bin"
-                    ./executor &
-                    success_message "Нода перезапущена с дефолтными RPC настройками"
-                fi
-            else
-                info_message "Сброс настроек отменен"
-            fi
-            ;;
-        5)
-            info_message "Возвращаемся в главное меню"
-            return 0
-            ;;
-        *)
-            error_message "Неверный выбор. Пожалуйста, введите номер от 1 до 5."
-            ;;
-    esac
-}
-
-# Функция для установки конкретной версии ноды
-install_specific_version() {
-    echo -e "\n${BOLD}${BLUE}⏮️ Установка конкретной версии ноды T3RN...${NC}\n"
-    
-    # Получаем список доступных версий с GitHub API
-    echo -e "${WHITE}[${CYAN}1/4${WHITE}] ${GREEN}➜ ${WHITE}🔍 Получение списка доступных версий...${NC}"
-    RELEASES=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases)
-    
-    if [ -z "$RELEASES" ] || [ "$RELEASES" = "[]" ]; then
-        error_message "Не удалось получить список релизов. Проверьте подключение к интернету."
-        return 1
-    fi
-    
-    # Выводим список доступных версий (последние 10)
-    echo -e "\n${CYAN}Доступные версии ноды T3RN:${NC}\n"
-    
-    # Используем jq для извлечения имен тегов (версий) и дат релизов
-    TAGS=()
-    echo "$RELEASES" | jq -r '.[] | "\(.tag_name) - \(.published_at | fromdateiso8601 | strftime("%d-%m-%Y"))"' | head -10 | nl -w2 -s') '
-    
-    # Сохраняем теги в массив для последующего выбора
-    mapfile -t TAGS < <(echo "$RELEASES" | jq -r '.[].tag_name' | head -10)
-    
-    # Запрашиваем у пользователя выбор версии
-    echo -e "\n${GREEN}Введите номер версии для установки (1-${#TAGS[@]}):${NC}"
-    read -p "➜ " version_choice
-    
-    # Проверка корректности ввода
-    if ! [[ "$version_choice" =~ ^[0-9]+$ ]] || [ "$version_choice" -lt 1 ] || [ "$version_choice" -gt "${#TAGS[@]}" ]; then
-        error_message "Неверный выбор. Пожалуйста, введите номер от 1 до ${#TAGS[@]}."
-        return 1
-    fi
-    
-    # Выбранная версия
-    SELECTED_TAG="${TAGS[$version_choice-1]}"
-    success_message "Выбрана версия: $SELECTED_TAG"
-    
-    echo -e "${WHITE}[${CYAN}2/4${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка работающих экземпляров...${NC}"
+    echo -e "${WHITE}[${CYAN}1/5${WHITE}] ${GREEN}➜ ${WHITE}🧹 Очистка предыдущих установок...${NC}"
+    # Сначала проверяем и останавливаем ноду, если она запущена
     kill_running_executor
-    success_message "Подготовка к установке завершена"
     
-    echo -e "${WHITE}[${CYAN}3/4${WHITE}] ${GREEN}➜ ${WHITE}🧹 Очистка предыдущей установки...${NC}"
     if [ -d "$HOME/t3rn" ]; then
+        # Сохраняем файлы логов, если они существуют
+        if [ -f "$HOME/t3rn/setup.log" ]; then
+            cp "$HOME/t3rn/setup.log" "/tmp/t3rn_setup.log.backup"
+        fi
+        if [ -f "$HOME/t3rn/node.log" ]; then
+            cp "$HOME/t3rn/node.log" "/tmp/t3rn_node.log.backup"
+        fi
+        # Сохраняем конфигурационный файл газа, если он существует
+        if [ -f "$HOME/t3rn/gas_config.txt" ]; then
+            cp "$HOME/t3rn/gas_config.txt" "/tmp/t3rn_gas_config.backup"
+        fi
+        # Сохраняем конфигурационный файл RPC, если он существует
+        if [ -f "$HOME/t3rn/rpc_config.json" ]; then
+            cp "$HOME/t3rn/rpc_config.json" "/tmp/t3rn_rpc_config.backup"
+        fi
+        
         rm -rf "$HOME/t3rn"
+        
+        # Создаем директорию заново и восстанавливаем логи и конфигурацию
+        mkdir -p "$HOME/t3rn"
+        if [ -f "/tmp/t3rn_setup.log.backup" ]; then
+            cp "/tmp/t3rn_setup.log.backup" "$HOME/t3rn/setup.log"
+        fi
+        if [ -f "/tmp/t3rn_node.log.backup" ]; then
+            cp "/tmp/t3rn_node.log.backup" "$HOME/t3rn/node.log"
+        fi
+        if [ -f "/tmp/t3rn_gas_config.backup" ]; then
+            cp "/tmp/t3rn_gas_config.backup" "$HOME/t3rn/gas_config.txt"
+        fi
+        if [ -f "/tmp/t3rn_rpc_config.backup" ]; then
+            cp "/tmp/t3rn_rpc_config.backup" "$HOME/t3rn/rpc_config.json"
+        fi
+    else
+        mkdir -p "$HOME/t3rn"
     fi
+    
     if [ -d "$HOME/executor" ]; then
         rm -rf "$HOME/executor"
     fi
+    
     if ls executor-linux-*.tar.gz 1> /dev/null 2>&1; then
         rm -f executor-linux-*.tar.gz
     fi
-    success_message "Предыдущая установка очищена"
+    success_message "Предыдущие установки очищены"
     
-    echo -e "${WHITE}[${CYAN}4/4${WHITE}] ${GREEN}➜ ${WHITE}📥 Установка версии $SELECTED_TAG...${NC}"
+    echo -e "${WHITE}[${CYAN}2/5${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка последней версии...${NC}"
+    cd "$HOME/t3rn" || { 
+        error_message "Не удалось перейти в директорию t3rn"
+        return 1
+    }
     
-    # Создаем директорию и загружаем выбранную версию
-    mkdir -p "$HOME/t3rn"
-    cd "$HOME/t3rn"
-    
-    DOWNLOAD_URL="https://github.com/t3rn/executor-release/releases/download/$SELECTED_TAG/executor-linux-$SELECTED_TAG.tar.gz"
-    wget --progress=bar:force:noscroll "$DOWNLOAD_URL" -O "executor-linux-$SELECTED_TAG.tar.gz"
-    
-    if [ $? -ne 0 ]; then
-        error_message "Не удалось загрузить выбранную версию. Проверьте URL и попробуйте снова."
+    LATEST_TAG=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+    if [ -z "$LATEST_TAG" ]; then
+        error_message "Не удалось получить последний тег релиза. Проверьте подключение к интернету."
         return 1
     fi
     
-    # Распаковываем архив
-    tar -xvzf "executor-linux-$SELECTED_TAG.tar.gz"
+    DOWNLOAD_URL="https://github.com/t3rn/executor-release/releases/download/$LATEST_TAG/executor-linux-$LATEST_TAG.tar.gz"
+    wget --progress=bar:force:noscroll "$DOWNLOAD_URL" -O "executor-linux-$LATEST_TAG.tar.gz"
+    if [ $? -ne 0 ]; then
+        error_message "Не удалось загрузить последний релиз. Проверьте URL и попробуйте снова."
+        return 1
+    fi
+    success_message "Загрузка завершена"
+    
+    echo -e "${WHITE}[${CYAN}3/5${WHITE}] ${GREEN}➜ ${WHITE}📦 Распаковка архива...${NC}"
+    tar -xvzf "executor-linux-$LATEST_TAG.tar.gz"
     if [ $? -ne 0 ]; then
         error_message "Не удалось извлечь архив. Проверьте файл и попробуйте снова."
         return 1
     fi
+    success_message "Архив распакован"
     
-    # Подготавливаем исполняемый файл
+    echo -e "${WHITE}[${CYAN}4/5${WHITE}] ${GREEN}➜ ${WHITE}⚙️ Настройка ноды...${NC}"
     mkdir -p executor/executor/bin
     cd executor/executor/bin || {
-        error_message "Не удалось перейти к расположению бинарного файла executor."
+        error_message "Не удалось перейти к расположению бинарного файла executor"
         return 1
     }
     chmod +x executor
     
-    # Настройка ноды
-    echo -e "\n${CYAN}Теперь нужно настроить ноду.${NC}"
+    # Здесь вызываем функцию для настройки ноды
     configure_node
+    success_message "Настройка завершена"
     
-    # Запуск ноды
-    echo -e "\n${GREEN}🚀 Запуск ноды версии $SELECTED_TAG...${NC}"
-    ./executor &
+    echo -e "${WHITE}[${CYAN}5/5${WHITE}] ${GREEN}➜ ${WHITE}▶️ Запуск ноды...${NC}"
+    
+    # Проверяем доступность порта 9090 перед запуском
+    check_and_free_port
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+    
+    # Создаем файл для логов ноды, если он не существует
+    NODE_LOG="$HOME/t3rn/node.log"
+    touch "$NODE_LOG"
+    
+    # Запуск ноды в фоновом режиме с перенаправлением вывода в лог-файл
+    ./executor > "$NODE_LOG" 2>&1 &
+    local NODE_PID=$!
+    
+    # Проверяем, запустилась ли нода успешно
+    sleep 3
+    if ps -p $NODE_PID > /dev/null; then
+        success_message "Нода запущена в фоновом режиме (PID: $NODE_PID)"
+        success_message "Логи работы ноды сохраняются в: $NODE_LOG"
+    else
+        error_message "Возникла ошибка при запуске ноды. Проверьте логи для дополнительной информации."
+        return 1
+    fi
     
     echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}✨ Нода T3RN версии $SELECTED_TAG успешно установлена и запущена!${NC}"
+    echo -e "${GREEN}✨ Нода T3RN успешно установлена и запущена!${NC}"
+    echo -e "${CYAN}Версия: ${LATEST_TAG}${NC}"
     echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
+}
+
+# Функция для проверки и освобождения порта 9090
+check_and_free_port() {
+    echo -e "${WHITE}[${CYAN}*${WHITE}] ${GREEN}➜ ${WHITE}🔍 Проверка доступности порта 9090...${NC}"
+    
+    # Проверяем, занят ли порт 9090
+    local port_pid=$(lsof -ti:9090)
+    
+    if [ -n "$port_pid" ]; then
+        warning_message "Порт 9090 уже занят процессом с PID: $port_pid"
+        echo -e "${ORANGE}Это может произойти, если предыдущая нода не была корректно остановлена.${NC}"
+        echo -e "${YELLOW}Хотите освободить порт 9090, завершив процесс? (y/n)${NC}"
+        read -p "➜ " free_port
+        
+        if [[ "$free_port" =~ ^[Yy]$ ]]; then
+            echo -e "${ORANGE}Завершение процесса с PID: $port_pid...${NC}"
+            kill -9 $port_pid
+    sleep 2
+            
+            # Проверяем, освободился ли порт
+            if lsof -ti:9090 > /dev/null; then
+                error_message "Не удалось освободить порт 9090. Пожалуйста, перезагрузите сервер или освободите порт вручную."
+                return 1
+            else
+                success_message "Порт 9090 успешно освобожден"
+            fi
+        else
+            error_message "Порт 9090 занят. Запуск ноды невозможен. Перезагрузите сервер или освободите порт вручную."
+            return 1
+        fi
+    else
+        success_message "Порт 9090 свободен"
+    fi
+    
+    return 0
+}
+
+# Функция для управления газом
+manage_gas() {
+    local return_to_main=false
+    local gas_config_file="$HOME/t3rn/gas_config.txt"
+    local current_gas_value
+    
+    while [ "$return_to_main" = false ]; do
+        clear
+        echo -e "\n${BOLD}${BLUE}⛽ Управление газом для ноды T3RN...${NC}\n"
+        
+        # Проверка наличия установленной ноды
+        if [ ! -f "$HOME/t3rn/executor/executor/bin/executor" ]; then
+            error_message "Нода не установлена. Сначала выполните установку."
+            return 1
+        fi
+        
+        # Получаем текущее значение газа из конфигурационного файла или из запущенной ноды
+        if [ -f "$gas_config_file" ]; then
+            current_gas_value=$(cat "$gas_config_file")
+        else
+            # Проверяем, запущена ли нода
+            NODE_PID=$(pgrep -f "./executor")
+            if [ -n "$NODE_PID" ]; then
+                # Попытка определить значение газа из переменных окружения процесса
+                if command -v pgrep > /dev/null && command -v xargs > /dev/null && command -v grep > /dev/null; then
+                    gas_from_env=$(pgrep -f "./executor" | xargs -I{} grep -z "MAX_L3_GAS_PRICE" /proc/{}/environ 2>/dev/null | tr '\0' '\n' | grep "EXECUTOR_MAX_L3_GAS_PRICE" | cut -d= -f2)
+                    if [ -n "$gas_from_env" ]; then
+                        current_gas_value=$gas_from_env
+                    else
+                        current_gas_value="Не удалось определить"
+                    fi
+                else
+                    current_gas_value="Не удалось определить"
+                fi
+            else
+                current_gas_value="Нода не запущена"
+            fi
+        fi
+        
+        # Отображаем информацию
+        echo -e "${BOLD}${WHITE}╔══════════════════════════════════════════╗${NC}"
+        echo -e "${BOLD}${WHITE}║           ТЕКУЩЕЕ ЗНАЧЕНИЕ ГАЗА          ║${NC}"
+        echo -e "${BOLD}${WHITE}╚══════════════════════════════════════════╝${NC}"
+        
+        echo -e "${CYAN}Текущее установленное значение газа:${NC} ${YELLOW}$current_gas_value${NC}\n"
+        
+        # Подменю для работы с газом
+        echo -e "${BOLD}${BLUE}Выберите действие:${NC}\n"
+        echo -e "${WHITE}[${CYAN}1${WHITE}] ${GREEN}➜ ${WHITE}🔄 Изменить значение газа${NC}"
+        echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}🔙 Вернуться в главное меню${NC}\n"
+        
+        read -p "$(echo -e "${GREEN}Введите номер действия [1-2]:${NC} ")" gas_choice
+        
+        case $gas_choice in
+            1)
+                echo -e "\n${BOLD}${BLUE}🔄 Изменение значения газа${NC}\n"
+                
+                # Предупреждение о перезапуске ноды
+                echo -e "${YELLOW}⚠️ Для применения нового значения газа потребуется перезапуск ноды.${NC}\n"
+                
+                # Запрашиваем новое значение газа
+                echo -e "${CYAN}Введите новое значение газа (целое число от 100 до 20000):${NC}"
+while true; do
+                    read -p "➜ " new_gas_value
+                    if [[ "$new_gas_value" =~ ^[0-9]+$ ]] && (( new_gas_value >= 100 && new_gas_value <= 20000 )); then
+                        # Сохраняем новое значение газа
+                        echo "$new_gas_value" > "$gas_config_file"
+                        success_message "Значение газа установлено: $new_gas_value"
+                        
+                        # Спрашиваем о перезапуске ноды
+                        echo -e "\n${YELLOW}⚠️ Для применения изменений нужно перезапустить ноду.${NC}"
+                        echo -e "${GREEN}Хотите перезапустить ноду сейчас? (y/n)${NC}"
+                        read -p "➜ " restart_node
+                        
+                        if [[ "$restart_node" =~ ^[Yy]$ ]]; then
+                            kill_running_executor
+                            success_message "Нода остановлена. Подготовка к запуску с новым значением газа..."
+                            
+                            # Проверяем доступность порта 9090
+                            check_and_free_port
+                            if [ $? -ne 0 ]; then
+                                echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню газа...${NC}"
+                                read -s
+                                continue
+                            fi
+                            
+                            # Экспортируем переменную окружения для executor
+                            export EXECUTOR_MAX_L3_GAS_PRICE=$new_gas_value
+                            
+                            # Запускаем ноду с новыми настройками
+                            cd "$HOME/t3rn/executor/executor/bin"
+                            ./executor > "$HOME/t3rn/node.log" 2>&1 &
+                            local NODE_PID=$!
+                            
+                            # Проверяем, запустилась ли нода успешно
+                            sleep 3
+                            if ps -p $NODE_PID > /dev/null; then
+                                success_message "Нода перезапущена с новым значением газа (PID: $NODE_PID)"
+                            else
+                                error_message "Возникла ошибка при запуске ноды. Проверьте логи для дополнительной информации."
+                            fi
+                        fi
+                        
+        break
+    else
+                        error_message "Ошибка: Значение газа должно быть от 100 до 20000."
+    fi
+done
+
+                echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню газа...${NC}"
+                read -s
+                ;;
+                
+            2)
+                info_message "Возвращаемся в главное меню"
+                return_to_main=true
+                ;;
+                
+            *)
+                error_message "Неверный выбор. Пожалуйста, введите 1 или 2."
+                sleep 2
+                ;;
+        esac
+    done
+    
+    return 0
+}
+
+# Функция для настройки RPC эндпоинтов
+configure_rpc_endpoints() {
+    case $NODE_TYPE in
+        "alchemy-rpc")
+            echo -e "${GREEN}⚙️ Добавление Alchemy endpoints...${NC}"
+            RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq \
+                --arg arbt "https://arb-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
+                --arg bast "https://base-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
+                --arg opst "https://opt-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
+                --arg blst "https://blast-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY" \
+                '.arbt += [$arbt] | .bast += [$bast] | .opst += [$opst] | .blst += [$blst]')
+            ;;
+
+        "custom-rpc")
+            echo -e "${GREEN}⚙️ Использование только пользовательских RPC endpoints...${NC}"
+            RPC_ENDPOINTS_JSON=$(echo "$RPC_ENDPOINTS_JSON" | jq 'del(.arbt, .bast, .opst, .blst)')
+            ;;
+    esac
+}
+
+# Функция для запуска ноды
+start_node() {
+    echo -e "\n${BOLD}${BLUE}▶️ Запуск ноды T3RN...${NC}\n"
+    
+    # Проверяем, существует ли исполняемый файл
+    if [ ! -f "$HOME/t3rn/executor/executor/bin/executor" ]; then
+        error_message "Исполняемый файл ноды не найден. Сначала установите ноду (опция 1)."
+        return 1
+    fi
+    
+    # Проверяем, не запущена ли уже нода
+    NODE_PID=$(pgrep -f executor)
+    if [ -n "$NODE_PID" ]; then
+        echo -e "${YELLOW}⚠️ Нода уже запущена с PID: $NODE_PID${NC}"
+        echo -e "${CYAN}Хотите остановить текущую ноду и запустить заново? (y/n)${NC}"
+        read -p "➜ " restart_choice
+        
+        if [[ "$restart_choice" =~ ^[Yy]$ ]]; then
+            echo -e "${ORANGE}🛑 Останавливаем текущую ноду...${NC}"
+            kill_running_executor
+            sleep 2
+        else
+            info_message "Операция отменена. Нода продолжает работу."
+            return 0
+        fi
+    fi
+    
+    # Переходим в директорию с исполняемым файлом
+    cd "$HOME/t3rn/executor/executor/bin" || {
+        error_message "Не удалось перейти в директорию с исполняемым файлом."
+        return 1
+    }
+    
+    # Проверяем доступность порта 9090 перед запуском
+    check_and_free_port
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+    
+    # Создаем файл для логов ноды, если он не существует
+    NODE_LOG="$HOME/t3rn/node.log"
+    touch "$NODE_LOG"
+    
+    echo -e "${GREEN}🚀 Запускаем ноду T3RN...${NC}"
+    
+    # Создаем отдельную директорию для вывода и перенаправляем stderr в stdout в фоновом режиме
+    mkdir -p "$HOME/t3rn/logs"
+    
+    # Запускаем ноду в фоновом режиме с перенаправлением вывода в лог-файл
+    # и отключением вывода в терминал
+    ./executor > "$NODE_LOG" 2>&1 &
+    NODE_PID=$!
+    
+    # Проверяем, запустилась ли нода успешно
+    sleep 3
+    if ps -p $NODE_PID > /dev/null; then
+        success_message "Нода успешно запущена (PID: $NODE_PID)"
+        success_message "Логи работы ноды сохраняются в: $NODE_LOG"
+    else
+        error_message "Возникла ошибка при запуске ноды. Проверьте логи для дополнительной информации."
+        return 1
+    fi
+    
+    echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}✨ Нода T3RN успешно запущена!${NC}"
+    echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
+}
+
+# Функция для проверки статуса ноды
+check_status() {
+    echo -e "\n${BOLD}${BLUE}🔍 Проверка статуса ноды T3RN...${NC}\n"
+    
+    # Проверка наличия запущенного процесса
+    PID=$(pgrep -f "./executor")
+    
+    if [ -n "$PID" ]; then
+        success_message "Нода активна (PID: $PID)"
+        echo -e "${CYAN}Время работы:${NC}"
+        ps -p $PID -o etime=
+    else
+        warning_message "Нода не запущена"
+    fi
+    
+    # Проверка наличия установленных файлов
+    if [ -f "$HOME/t3rn/executor/executor/bin/executor" ]; then
+        success_message "Нода установлена"
+    else
+        warning_message "Файлы ноды не найдены. Возможно, нода не установлена."
+    fi
+    
+    echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}Для запуска ноды используйте опцию 3 в главном меню${NC}"
+    echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
+}
+
+# Функция для обновления ноды
+update_node() {
+    echo -e "\n${BOLD}${BLUE}⬆️ Обновление ноды T3RN...${NC}\n"
+    
+    echo -e "${WHITE}[${CYAN}1/5${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка работающих экземпляров...${NC}"
+    kill_running_executor
+    success_message "Все экземпляры остановлены"
+    
+    echo -e "${WHITE}[${CYAN}2/5${WHITE}] ${GREEN}➜ ${WHITE}🧹 Очистка предыдущей установки...${NC}"
+    if [ -d "$HOME/t3rn" ]; then
+        # Сохраняем файлы логов, если они существуют
+        if [ -f "$HOME/t3rn/setup.log" ]; then
+            cp "$HOME/t3rn/setup.log" "/tmp/t3rn_setup.log.backup"
+        fi
+        if [ -f "$HOME/t3rn/node.log" ]; then
+            cp "$HOME/t3rn/node.log" "/tmp/t3rn_node.log.backup"
+        fi
+        # Сохраняем конфигурационный файл газа, если он существует
+        if [ -f "$HOME/t3rn/gas_config.txt" ]; then
+            cp "$HOME/t3rn/gas_config.txt" "/tmp/t3rn_gas_config.backup"
+        fi
+        # Сохраняем конфигурационный файл RPC, если он существует
+        if [ -f "$HOME/t3rn/rpc_config.json" ]; then
+            cp "$HOME/t3rn/rpc_config.json" "/tmp/t3rn_rpc_config.backup"
+        fi
+        
+        rm -rf "$HOME/t3rn"
+        
+        # Создаем директорию заново и восстанавливаем логи и конфигурацию
+        mkdir -p "$HOME/t3rn"
+        if [ -f "/tmp/t3rn_setup.log.backup" ]; then
+            cp "/tmp/t3rn_setup.log.backup" "$HOME/t3rn/setup.log"
+        fi
+        if [ -f "/tmp/t3rn_node.log.backup" ]; then
+            cp "/tmp/t3rn_node.log.backup" "$HOME/t3rn/node.log"
+        fi
+        if [ -f "/tmp/t3rn_gas_config.backup" ]; then
+            cp "/tmp/t3rn_gas_config.backup" "$HOME/t3rn/gas_config.txt"
+        fi
+        if [ -f "/tmp/t3rn_rpc_config.backup" ]; then
+            cp "/tmp/t3rn_rpc_config.backup" "$HOME/t3rn/rpc_config.json"
+        fi
+        
+        success_message "Предыдущая установка удалена"
+    else
+        info_message "Предыдущая установка не найдена"
+    fi
+    
+    echo -e "${WHITE}[${CYAN}3/5${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка последней версии...${NC}"
+    mkdir -p "$HOME/t3rn"
+    cd "$HOME/t3rn"
+    LATEST_TAG=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+    if [ -z "$LATEST_TAG" ]; then
+        error_message "Не удалось получить последний тег релиза. Проверьте подключение к интернету."
+        return 1
+    fi
+    
+    DOWNLOAD_URL="https://github.com/t3rn/executor-release/releases/download/$LATEST_TAG/executor-linux-$LATEST_TAG.tar.gz"
+    wget --progress=bar:force:noscroll "$DOWNLOAD_URL" -O "executor-linux-$LATEST_TAG.tar.gz"
+    if [ $? -ne 0 ]; then
+        error_message "Не удалось загрузить последний релиз. Проверьте URL и попробуйте снова."
+        return 1
+    fi
+    success_message "Загрузка завершена"
+    
+    echo -e "${WHITE}[${CYAN}4/5${WHITE}] ${GREEN}➜ ${WHITE}📦 Распаковка архива...${NC}"
+    tar -xvzf "executor-linux-$LATEST_TAG.tar.gz"
+    if [ $? -ne 0 ]; then
+        error_message "Не удалось извлечь архив. Проверьте файл и попробуйте снова."
+        return 1
+    fi
+    success_message "Архив распакован"
+    
+    echo -e "${WHITE}[${CYAN}5/5${WHITE}] ${GREEN}➜ ${WHITE}✅ Завершение обновления...${NC}"
+    mkdir -p executor/executor/bin
+    cd executor/executor/bin
+    chmod +x executor
+    success_message "Исполняемый файл настроен"
+    
+    echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}✨ Нода T3RN успешно обновлена до версии $LATEST_TAG!${NC}"
+    echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
+}
+
+# Функция для удаления ноды
+remove_node() {
+    local return_to_main=false
+    
+    while [ "$return_to_main" = false ]; do
+        clear
+        echo -e "\n${BOLD}${RED}⚠️ Удаление ноды T3RN...${NC}\n"
+        
+        # Проверка наличия установленной ноды
+        if [ ! -d "$HOME/t3rn" ] && [ ! -d "$HOME/executor" ]; then
+            error_message "Нода не установлена. Нечего удалять."
+            sleep 2
+            return 1
+        fi
+        
+        echo -e "${BOLD}${RED}Вы уверены, что хотите удалить ноду T3RN и все связанные с ней файлы?${NC}"
+        echo -e "${YELLOW}Это действие невозможно отменить.${NC}\n"
+        
+        echo -e "${BOLD}${BLUE}Выберите действие:${NC}\n"
+        echo -e "${WHITE}[${CYAN}1${WHITE}] ${RED}➜ ${WHITE}🗑️ Удалить ноду и все файлы${NC}"
+        echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}🔙 Вернуться в главное меню${NC}\n"
+        
+        read -p "$(echo -e "${GREEN}Введите номер действия [1-2]:${NC} ")" confirm
+        
+        case $confirm in
+            1)
+                echo -e "\n${WHITE}[${CYAN}1/3${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка и удаление всех процессов ноды...${NC}"
+                
+                # Находим все процессы, связанные с нодой и завершаем их
+                NODE_PIDS=$(pgrep -f "executor")
+                if [ -n "$NODE_PIDS" ]; then
+                    for pid in $NODE_PIDS; do
+                        echo -e "${ORANGE}Завершение процесса с PID: $pid...${NC}"
+                        kill -9 $pid 2>/dev/null
+                    done
+                    sleep 2
+                    
+                    # Проверка на наличие оставшихся процессов
+                    REMAINING_PIDS=$(pgrep -f "executor")
+                    if [ -n "$REMAINING_PIDS" ]; then
+                        warning_message "Некоторые процессы ноды не удалось завершить. Может потребоваться перезагрузка системы."
+                    else
+                        success_message "Все процессы ноды успешно остановлены"
+                    fi
+                else
+                    info_message "Активных процессов ноды не обнаружено"
+                fi
+                
+                echo -e "\n${WHITE}[${CYAN}2/3${WHITE}] ${GREEN}➜ ${WHITE}🗑️ Удаление файлов и директорий...${NC}"
+                # Удаляем основную директорию ноды
+                if [ -d "$HOME/t3rn" ]; then
+                    rm -rf "$HOME/t3rn"
+                    success_message "Директория $HOME/t3rn удалена"
+                else
+                    info_message "Директория $HOME/t3rn не найдена"
+                fi
+                
+                # Удаляем дополнительные файлы, если они существуют
+                if [ -d "$HOME/executor" ]; then
+                    rm -rf "$HOME/executor"
+                    success_message "Директория $HOME/executor удалена"
+                else
+                    info_message "Директория $HOME/executor не найдена"
+                fi
+                
+                # Удаляем архивы, если они есть
+                if ls "$HOME"/executor-linux-*.tar.gz 1> /dev/null 2>&1; then
+                    rm -f "$HOME"/executor-linux-*.tar.gz
+                    success_message "Архивы executor-linux-*.tar.gz удалены"
+                fi
+                
+                echo -e "\n${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}✅ Проверка завершения удаления...${NC}"
+                # Финальная проверка
+                if [ ! -d "$HOME/t3rn" ] && [ ! -d "$HOME/executor" ] && ! pgrep -f "executor" > /dev/null; then
+                    echo -e "\n${GREEN}✅ Нода T3RN и все связанные с ней файлы успешно удалены!${NC}"
+                else
+                    warning_message "Некоторые компоненты ноды могли остаться в системе. Рекомендуется перезагрузка."
+                fi
+                
+                echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в главное меню...${NC}"
+                read -s
+                return_to_main=true
+                ;;
+                
+            2)
+                info_message "Возвращаемся в главное меню"
+                return_to_main=true
+                ;;
+                
+            *)
+                error_message "Неверный выбор. Пожалуйста, введите 1 или 2."
+                sleep 2
+                    ;;
+            esac
+        done
+    
+    return 0
+}
+
+# Функция для проверки логов
+check_logs() {
+    # Сбрасываем все предыдущие ловушки
+    trap - INT
+    
+    local return_to_main=false
+    
+    while [ "$return_to_main" = false ]; do
+        clear
+        echo -e "\n${BOLD}${BLUE}📋 Просмотр логов ноды T3RN...${NC}\n"
+        
+        # Проверка наличия установленной ноды
+        if [ ! -f "$HOME/t3rn/executor/executor/bin/executor" ]; then
+            error_message "Нода не установлена. Сначала выполните установку."
+            sleep 2
+            return 1
+        fi
+        
+        # Устанавливаем пути к лог-файлам
+        SETUP_LOG="$HOME/t3rn/setup.log"
+        NODE_LOG="$HOME/t3rn/node.log"
+        
+        # Проверяем существование лог-файлов
+        if [ ! -f "$SETUP_LOG" ] && [ ! -f "$NODE_LOG" ]; then
+            error_message "Файлы логов не найдены"
+            sleep 2
+            return 1
+        fi
+    
+        # Подменю для работы с логами
+        echo -e "${BOLD}${BLUE}Выберите действие:${NC}\n"
+        echo -e "${WHITE}[${CYAN}1${WHITE}] ${GREEN}➜ ${WHITE}📄 Просмотр логов установки и настройки${NC}"
+        echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}📃 Просмотр логов работы ноды${NC}"
+        echo -e "${WHITE}[${CYAN}3${WHITE}] ${GREEN}➜ ${WHITE}🔙 Вернуться в главное меню${NC}\n"
+        
+        read -p "$(echo -e "${GREEN}Введите номер действия [1-3]:${NC} ")" log_choice
+        
+        case $log_choice in
+            1)
+                if [ ! -f "$SETUP_LOG" ]; then
+                    error_message "Файл логов установки не найден"
+                    sleep 2
+                    continue
+                fi
+                
+                # Информация о возврате в меню
+                echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
+                echo -e "${YELLOW}ℹ️ Чтобы вернуться в меню, нажмите CTRL+C${NC}"
+                echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
+                
+                # Пауза перед показом логов
+                echo -e "${CYAN}Начинаем просмотр логов установки через 5 секунд...${NC}"
+                for i in {5..1}; do
+                    echo -ne "${ORANGE}$i...${NC}"
+                    sleep 1
+                done
+                echo -e "\n"
+                
+                echo -e "${CYAN}Последние 25 строк лога установки:${NC}\n"
+                tail -n 25 "$SETUP_LOG"
+                
+                echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
+                echo -e "${YELLOW}Для просмотра полного лога используйте:${NC}"
+                echo -e "${CYAN}cat $SETUP_LOG${NC}"
+                echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
+                
+                # Спрашиваем, хочет ли пользователь продолжить мониторинг
+                echo -e "${ORANGE}Хотите следить за обновлением логов установки? (y/n)${NC}"
+                read -p "➜ " monitor_choice
+                
+                if [[ "$monitor_choice" =~ ^[Yy]$ ]]; then
+                    echo -e "${ORANGE}Следим за обновлением логов. Для выхода нажмите CTRL+C...${NC}\n"
+                    # Устанавливаем ловушку для возврата в меню логов при нажатии CTRL+C
+                    watch_logs=true
+                    trap 'watch_logs=false' INT
+                    
+                    # Используем цикл вместо простого tail -f для возможности выхода
+                    while $watch_logs; do
+                        # Читаем последние 10 строк с интервалом в 1 секунду
+                        tail -n 10 "$SETUP_LOG"
+                        sleep 1
+                        # Очищаем экран только если все еще следим за логами
+                        if $watch_logs; then
+                            echo -e "\n${CYAN}--- Обновление логов (Нажмите CTRL+C для выхода) ---${NC}\n"
+                        fi
+                    done
+                    # Сбрасываем ловушку и показываем сообщение
+                    trap - INT
+                    echo -e "\n${GREEN}Возвращаемся в меню логов...${NC}"
+                    sleep 2
+                fi
+                ;;
+                
+            2)
+                if [ ! -f "$NODE_LOG" ]; then
+                    error_message "Файл логов работы ноды не найден"
+                    sleep 2
+                    continue
+                fi
+                
+                # Информация о возврате в меню
+                echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
+                echo -e "${YELLOW}ℹ️ Чтобы вернуться в меню, нажмите CTRL+C${NC}"
+                echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
+                
+                # Пауза перед показом логов
+                echo -e "${CYAN}Начинаем просмотр логов работы ноды через 5 секунд...${NC}"
+                for i in {5..1}; do
+                    echo -ne "${ORANGE}$i...${NC}"
+                    sleep 1
+                done
+                echo -e "\n"
+                
+                echo -e "${CYAN}Последние 25 строк лога работы ноды:${NC}\n"
+                tail -n 25 "$NODE_LOG"
+                
+                echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
+                echo -e "${YELLOW}Для просмотра полного лога используйте:${NC}"
+                echo -e "${CYAN}cat $NODE_LOG${NC}"
+                echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
+                
+                # Спрашиваем, хочет ли пользователь продолжить мониторинг
+                echo -e "${ORANGE}Хотите следить за обновлением логов работы ноды? (y/n)${NC}"
+                read -p "➜ " monitor_choice
+                
+                if [[ "$monitor_choice" =~ ^[Yy]$ ]]; then
+                    echo -e "${ORANGE}Следим за обновлением логов. Для выхода нажмите CTRL+C...${NC}\n"
+                    # Устанавливаем ловушку для возврата в меню логов при нажатии CTRL+C
+                    watch_logs=true
+                    trap 'watch_logs=false' INT
+                    
+                    # Используем цикл вместо простого tail -f для возможности выхода
+                    while $watch_logs; do
+                        # Читаем последние 10 строк с интервалом в 1 секунду
+                        tail -n 10 "$NODE_LOG"
+                        sleep 1
+                        # Очищаем экран только если все еще следим за логами
+                        if $watch_logs; then
+                            echo -e "\n${CYAN}--- Обновление логов (Нажмите CTRL+C для выхода) ---${NC}\n"
+                        fi
+                    done
+                    # Сбрасываем ловушку и показываем сообщение
+                    trap - INT
+                    echo -e "\n${GREEN}Возвращаемся в меню логов...${NC}"
+                    sleep 2
+                fi
+                ;;
+                
+            3)
+                return_to_main=true
+                ;;
+                
+            *)
+                error_message "Неверный выбор. Пожалуйста, введите номер от 1 до 3."
+                sleep 2
+                ;;
+        esac
+    done
+    
+    return 0
 }
 
 # Основной цикл программы
 main() {
+    echo -e "${BLUE}${BOLD}T3RN Node Installer${NC}"
+    echo -e "${ORANGE}================${NC}"
+    
     while true; do
         clear
-        # Отображение логотипа
-        curl -s https://raw.githubusercontent.com/Mozgiii9/NodeRunnerScripts/refs/heads/main/logo.sh | bash
-        
+        display_logo
         print_menu
-        echo -e "${BOLD}${BLUE}📝 Введите номер действия [1-9]:${NC} "
+        
         read -p "➜ " choice
         
         case $choice in
@@ -1499,39 +1753,34 @@ main() {
                 setup_node
                 ;;
             2)
-                start_node
-                ;;
-            3)
-                update_node
-                ;;
-            4)
-                check_logs
-                ;;
-            5)
-                check_status
-                ;;
-            6)
-                manage_rpc
-                ;;
-            7)
                 install_specific_version
                 ;;
-            8)
+            3)
+                check_logs
+                ;;
+            4)
+                manage_rpc
+                ;;
+            5)
+                manage_gas
+                ;;
+            6)
+                update_node
+                ;;
+            7)
                 remove_node
                 ;;
-            9)
-                echo -e "\n${GREEN}👋 До свидания!${NC}\n"
-                exit 0
+            8)
+                echo -e "${GREEN}Выход из программы. До свидания!${NC}"
+                break
                 ;;
             *)
-                echo -e "\n${RED}❌ Ошибка: Неверный выбор! Пожалуйста, введите номер от 1 до 9.${NC}\n"
+                error_message "Неверный выбор. Пожалуйста, выберите опцию от 1 до 8."
                 ;;
         esac
         
-        if [ "$choice" != "4" ]; then
-            echo -e "\nНажмите Enter, чтобы вернуться в меню..."
-            read
-        fi
+        echo -e "\n${ORANGE}Нажмите Enter, чтобы вернуться в меню...${NC}"
+        read -s
     done
 }
 
@@ -1570,7 +1819,7 @@ else
     fi
     
     # Сообщение о режиме dry-run
-    if $DRY_RUN; then
+if $DRY_RUN; then
         echo -e "${ORANGE}Режим dry-run включен. Изменения не будут внесены.${NC}"
     fi
     
