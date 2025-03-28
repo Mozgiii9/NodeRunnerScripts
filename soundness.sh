@@ -35,7 +35,7 @@ warning_message() {
 install_dependencies() {
     info_message "Установка необходимых пакетов..."
     sudo apt update
-    sudo apt install -y git
+    sudo apt install git pkg-config libssl-dev build-essential -y
     success_message "Зависимости установлены"
 }
 
