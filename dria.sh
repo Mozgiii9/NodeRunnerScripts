@@ -135,7 +135,29 @@ EOT"
 
 # Функция для обновления ноды
 update_node() {
-    echo -e "\n${BOLD}${GREEN}✅ У вас установлена актуальная версия ноды Dria${NC}\n"
+    echo -e "\n${BOLD}${BLUE}⬆️ Обновление ноды Dria...${NC}\n"
+
+    echo -e "${WHITE}[${CYAN}1/4${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка сервиса...${NC}"
+    sudo systemctl stop dria
+    sleep 3
+    success_message "Сервис остановлен"
+
+    echo -e "${WHITE}[${CYAN}2/4${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка обновлений...${NC}"
+    curl -fsSL https://dria.co/launcher | bash
+    success_message "Обновления загружены и установлены"
+
+    echo -e "${WHITE}[${CYAN}3/4${WHITE}] ${GREEN}➜ ${WHITE}🚀 Перезапуск сервиса...${NC}"
+    sleep 3
+    sudo systemctl restart dria
+    success_message "Сервис перезапущен"
+
+    echo -e "${WHITE}[${CYAN}4/4${WHITE}] ${GREEN}➜ ${WHITE}📋 Проверка логов...${NC}"
+    echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}✨ Нода успешно обновлена!${NC}"
+    echo -e "${PURPLE}═════════════════════════════════════════════${NC}\n"
+
+    # Проверка логов
+    sudo journalctl -u dria -f --no-hostname -o cat
 }
 
 # Функция для изменения порта
