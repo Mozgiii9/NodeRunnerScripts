@@ -143,7 +143,15 @@ update_node() {
     success_message "Сервис остановлен"
 
     echo -e "${WHITE}[${CYAN}2/4${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка обновлений...${NC}"
+    sudo rm /usr/local/bin/dkn-compute-launcher 2>/dev/null
     curl -fsSL https://dria.co/launcher | bash
+    sleep 3
+
+    echo -e "${WHITE}[${CYAN}1/4${WHITE}] ${GREEN}➜ ${WHITE}⚙️ Копируем бинарный файл из нового пути в /usr/local/bin...${NC}"
+    sudo cp $HOME/.dria/bin/dkn-compute-launcher /usr/local/bin/dkn-compute-launcher
+    sudo chmod +x /usr/local/bin/dkn-compute-launcher
+    sudo systemctl daemon-reload
+    sleep 3
     success_message "Обновления загружены и установлены"
 
     echo -e "${WHITE}[${CYAN}3/4${WHITE}] ${GREEN}➜ ${WHITE}🚀 Перезапуск сервиса...${NC}"
