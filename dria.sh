@@ -71,15 +71,19 @@ print_menu() {
 install_node() {
     echo -e "\n${BOLD}${BLUE}⚡ Установка ноды Dria...${NC}\n"
 
-    echo -e "${WHITE}[${CYAN}1/3${WHITE}] ${GREEN}➜ ${WHITE}🔄 Установка зависимостей...${NC}"
+    echo -e "${WHITE}[${CYAN}1/4${WHITE}] ${GREEN}➜ ${WHITE}🔄 Установка зависимостей...${NC}"
     install_dependencies
 
-    echo -e "${WHITE}[${CYAN}2/3${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка установщика...${NC}"
+    echo -e "${WHITE}[${CYAN}2/4${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка установщика...${NC}"
     info_message "Загрузка и установка Dria Compute Node..."
     curl -fsSL https://dria.co/launcher | bash
     success_message "Установщик загружен и выполнен"
+    
+    echo -e "${WHITE}[${CYAN}3/4${WHITE}] ${GREEN}➜ ${WHITE}⚙️ Настройка окружения...${NC}"
+    mkdir -p "$HOME/.dria/dkn-compute-launcher" && wget -O "$HOME/.dria/dkn-compute-launcher/.env" https://raw.githubusercontent.com/firstbatchxyz/dkn-compute-launcher/master/.env.example
+    success_message "Файл окружения загружен"
 
-    echo -e "${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}🚀 Запуск ноды...${NC}"
+    echo -e "${WHITE}[${CYAN}4/4${WHITE}] ${GREEN}➜ ${WHITE}🚀 Запуск ноды...${NC}"
     dkn-compute-launcher start
 
     echo -e "\n${PURPLE}═════════════════════════════════════════════${NC}"
@@ -207,14 +211,32 @@ change_port() {
 # Функция для проверки логов
 check_logs() {
     echo -e "\n${BOLD}${BLUE}📋 Проверка логов ноды Dria...${NC}\n"
-    sudo journalctl -u dria -f --no-hostname -o cat
+    
+    # Проверяем наличие активного сервиса
+    if systemctl is-active --quiet dria; then
+        # Если сервис запущен, проверяем логи через journalctl
+        info_message "Проверка логов через journalctl..."
+        sudo journalctl -u dria -f --no-hostname -o cat
+    else
+        # Если сервис не запущен, проверяем наличие screen-сессии
+        SESSION_ID=$(screen -ls | grep "dria" | awk '{print $1}' | head -1)
+        
+        if [ -n "$SESSION_ID" ]; then
+            # Если screen-сессия существует, подключаемся к ней
+            info_message "Проверка логов через screen..."
+            screen -r dria
+        else
+            # Если ни сервиса, ни screen-сессии нет
+            warning_message "Не найдено активных процессов Dria. Запустите ноду перед проверкой логов."
+        fi
+    fi
 }
 
 # Функция для удаления ноды
 remove_node() {
     echo -e "\n${BOLD}${RED}⚠️ Удаление ноды Dria...${NC}\n"
 
-    echo -e "${WHITE}[${CYAN}1/2${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка сервисов...${NC}"
+    echo -e "${WHITE}[${CYAN}1/3${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка сервисов...${NC}"
     # Остановка и удаление сервиса
     sudo systemctl stop dria
     sudo systemctl disable dria
@@ -222,8 +244,23 @@ remove_node() {
     sudo systemctl daemon-reload
     sleep 2
     success_message "Сервисы остановлены и удалены"
+    
+    echo -e "${WHITE}[${CYAN}2/3${WHITE}] ${GREEN}➜ ${WHITE}🔍 Поиск и завершение screen-сессий...${NC}"
+    # Находим все сессии screen, содержащие "dria"
+    SESSION_IDS=$(screen -ls | grep "dria" | awk '{print $1}' | cut -d '.' -f 1)
+    
+    # Если сессии найдены, удаляем их
+    if [ -n "$SESSION_IDS" ]; then
+        info_message "Завершение сессий screen с идентификаторами: $SESSION_IDS"
+        for SESSION_ID in $SESSION_IDS; do
+            screen -S "$SESSION_ID" -X quit
+        done
+        success_message "Сессии screen завершены"
+    else
+        info_message "Сессии screen для ноды Dria не найдены, продолжаем удаление"
+    fi
 
-    echo -e "${WHITE}[${CYAN}2/2${WHITE}] ${GREEN}➜ ${WHITE}🗑️ Удаление файлов...${NC}"
+    echo -e "${WHITE}[${CYAN}3/3${WHITE}] ${GREEN}➜ ${WHITE}🗑️ Удаление файлов...${NC}"
     # Удаление папки ноды
     rm -rf $HOME/.dria
     rm -rf ~/dkn-compute-node
