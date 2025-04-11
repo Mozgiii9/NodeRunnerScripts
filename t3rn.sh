@@ -51,11 +51,11 @@ print_menu() {
     
     echo -e "${BOLD}${BLUE}🔧 Доступные действия:${NC}\n"
     echo -e "${WHITE}[${CYAN}1${WHITE}] ${GREEN}➜ ${WHITE}🛠️  Установка ноды${NC}"
-    echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}⬆️  Откат на версию v0.53.1${NC}"
+    echo -e "${WHITE}[${CYAN}2${WHITE}] ${GREEN}➜ ${WHITE}⬆️  Обновление ноды${NC}"
     echo -e "${WHITE}[${CYAN}3${WHITE}] ${GREEN}➜ ${WHITE}📋 Проверка логов${NC}"
     echo -e "${WHITE}[${CYAN}4${WHITE}] ${GREEN}➜ ${WHITE}🔄 Перезапуск ноды${NC}"
     echo -e "${WHITE}[${CYAN}5${WHITE}] ${GREEN}➜ ${WHITE}🗑️  Удаление ноды${NC}"
-    echo -e "${WHITE}[${CYAN}6${WHITE}] ${GREEN}➜ ${WHITE}🚪 Выход${NC}\n"
+    echo -e "${WHITE}[${CYAN}6${WHITE}] ${GREEN}➜ ${WHITE}�� Выход${NC}\n"
 }
 
 # Проверка наличия bc и установка, если не установлен
@@ -90,14 +90,14 @@ install_node() {
     figlet -f /usr/share/figlet/starwars.flf 
 
     echo -e "${WHITE}[${CYAN}2/6${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка актуальной версии...${NC}"
-    EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/v0.53.1/executor-linux-v0.53.1.tar.gz"
-    curl -L -o executor-linux-v0.53.1.tar.gz $EXECUTOR_URL
+    EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/v0.59.0/executor-linux-v0.59.0.tar.gz"
+    curl -L -o executor-linux-v0.59.0.tar.gz $EXECUTOR_URL
     success_message "Бинарный файл успешно загружен!"
     sleep 1
 
     echo -e "${WHITE}[${CYAN}3/6${WHITE}] ${GREEN}➜ ${WHITE}📦 Распаковка архива...${NC}"
-    tar -xzvf executor-linux-v0.53.1.tar.gz
-    rm -rf executor-linux-v0.53.1.tar.gz
+    tar -xzvf executor-linux-v0.59.0.tar.gz
+    rm -rf executor-linux-v0.59.0.tar.gz
     success_message "Архив распакован"
     sleep 1
 
@@ -109,19 +109,24 @@ install_node() {
     # Создаем .t3rn и записываем приватный ключ
     CONFIG_FILE="$HOME_DIR/executor/executor/bin/.t3rn"
     echo "ENVIRONMENT=testnet" > $CONFIG_FILE
+    echo "EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=false" > $CONFIG_FILE
+    echo "EXECUTOR_PROCESS_ORDERS_API_ENABLED=false" > $CONFIG_FILE
+    echo "EXECUTOR_PROCESS_BIDS_BATCH=true" > $CONFIG_FILE
+    echo "EXECUTOR_ENABLE_BATCH_BIDDING=true" > $CONFIG_FILE
     echo "LOG_LEVEL=debug" >> $CONFIG_FILE
     echo "LOG_PRETTY=false" >> $CONFIG_FILE
     echo "EXECUTOR_PROCESS_BIDS_ENABLED=true" >> $CONFIG_FILE
     echo "EXECUTOR_PROCESS_ORDERS=true" >> $CONFIG_FILE
     echo "EXECUTOR_PROCESS_CLAIMS=true" >> $CONFIG_FILE
     echo "PRIVATE_KEY_LOCAL=" >> $CONFIG_FILE
-    echo "EXECUTOR_MAX_L3_GAS_PRICE=100" >> $CONFIG_FILE
+    echo "EXECUTOR_MAX_L3_GAS_PRICE=1500" >> $CONFIG_FILE
     echo "ENABLED_NETWORKS='arbitrum-sepolia,base-sepolia,optimism-sepolia,l2rn'" >> $CONFIG_FILE
     cat <<'EOF' >> $CONFIG_FILE
 RPC_ENDPOINTS='{
     "l2rn": ["https://b2n.rpc.caldera.xyz/http"],
     "arbt": ["https://arbitrum-sepolia.drpc.org", "https://sepolia-rollup.arbitrum.io/rpc"],
     "bast": ["https://base-sepolia-rpc.publicnode.com", "https://base-sepolia.drpc.org"],
+    "blst": ["https://sepolia.blast.io", "https://blast-sepolia.drpc.org"],
     "opst": ["https://sepolia.optimism.io", "https://optimism-sepolia.drpc.org"],
     "unit": ["https://unichain-sepolia.drpc.org", "https://sepolia.unichain.org"]
 }'
@@ -178,7 +183,7 @@ EOT"
 
 # Функция для обновления ноды
 update_node() {
-    echo -e "\n${BOLD}${BLUE}⬆️ Откат на версию v0.53.1 запущен...${NC}\n"
+    echo -e "\n${BOLD}${BLUE}⬆️ Обновление ноды t3rn...${NC}\n"
     
     echo -e "${WHITE}[${CYAN}1/4${WHITE}] ${GREEN}➜ ${WHITE}🛑 Остановка сервиса...${NC}"
     sudo systemctl stop t3rn
@@ -192,11 +197,12 @@ update_node() {
     sleep 1
     
     echo -e "${WHITE}[${CYAN}3/4${WHITE}] ${GREEN}➜ ${WHITE}📥 Загрузка новой версии...${NC}"
-    EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/v0.53.1/executor-linux-v0.53.1.tar.gz"
-    curl -L -o executor-linux-v0.53.1.tar.gz $EXECUTOR_URL
-    tar -xzvf executor-linux-v0.53.1.tar.gz
-    rm -rf executor-linux-v0.53.1.tar.gz
-    success_message "Откат успешно установлен. Версия ноды T3rn: v0.53.1"
+    LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep 'tag_name' | cut -d\" -f4)
+    EXECUTOR_URL="https://github.com/t3rn/executor-release/releases/download/${LATEST_VERSION}/executor-linux-${LATEST_VERSION}.tar.gz"
+    curl -L -o executor-linux-${LATEST_VERSION}.tar.gz $EXECUTOR_URL
+    tar -xzvf executor-linux-${LATEST_VERSION}.tar.gz
+    rm -rf executor-linux-${LATEST_VERSION}.tar.gz
+    success_message "Новая версия установлена"
     sleep 1
     
     echo -e "${WHITE}[${CYAN}4/4${WHITE}] ${GREEN}➜ ${WHITE}⚙️ Обновление конфигурации...${NC}"
@@ -207,19 +213,24 @@ update_node() {
     # Создаем .t3rn и записываем приватный ключ
     CONFIG_FILE="$HOME_DIR/executor/executor/bin/.t3rn"
     echo "ENVIRONMENT=testnet" > $CONFIG_FILE
+    echo "EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=false" > $CONFIG_FILE
+    echo "EXECUTOR_PROCESS_ORDERS_API_ENABLED=false" > $CONFIG_FILE
+    echo "EXECUTOR_PROCESS_BIDS_BATCH=true" > $CONFIG_FILE
+    echo "EXECUTOR_ENABLE_BATCH_BIDDING=true" > $CONFIG_FILE
     echo "LOG_LEVEL=debug" >> $CONFIG_FILE
     echo "LOG_PRETTY=false" >> $CONFIG_FILE
     echo "EXECUTOR_PROCESS_BIDS_ENABLED=true" >> $CONFIG_FILE
     echo "EXECUTOR_PROCESS_ORDERS=true" >> $CONFIG_FILE
     echo "EXECUTOR_PROCESS_CLAIMS=true" >> $CONFIG_FILE
     echo "PRIVATE_KEY_LOCAL=" >> $CONFIG_FILE
-    echo "EXECUTOR_MAX_L3_GAS_PRICE=100" >> $CONFIG_FILE
+    echo "EXECUTOR_MAX_L3_GAS_PRICE=1500" >> $CONFIG_FILE
     echo "ENABLED_NETWORKS='arbitrum-sepolia,base-sepolia,optimism-sepolia,l2rn'" >> $CONFIG_FILE
     cat <<'EOF' >> $CONFIG_FILE
 RPC_ENDPOINTS='{
     "l2rn": ["https://b2n.rpc.caldera.xyz/http"],
     "arbt": ["https://arbitrum-sepolia.drpc.org", "https://sepolia-rollup.arbitrum.io/rpc"],
     "bast": ["https://base-sepolia-rpc.publicnode.com", "https://base-sepolia.drpc.org"],
+    "blst": ["https://sepolia.blast.io", "https://blast-sepolia.drpc.org"],
     "opst": ["https://sepolia.optimism.io", "https://optimism-sepolia.drpc.org"],
     "unit": ["https://unichain-sepolia.drpc.org", "https://sepolia.unichain.org"]
 }'
